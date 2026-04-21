@@ -41,17 +41,17 @@ CopyTilemap:
     ld a, %11100100
     ld [rBGP], a
 
-    ld de, Paddle
-    ld hl, $8000
-    ld bc, PaddleEnd - Paddle
-CoppyPaddle:
-    ld a, [de]
-    ld [hli], a
-    inc de
-    dec bc
-    ld a, b
-    or a, c
-    jp nz, CoppyPaddle
+;     ld de, Paddle
+;     ld hl, $8000
+;     ld bc, PaddleEnd - Paddle
+; CoppyPaddle:
+;     ld a, [de]
+;     ld [hli], a
+;     inc de
+;     dec bc
+;     ld a, b
+;     or a, c
+;     jp nz, CoppyPaddle
 
 Done:
     jp Done
@@ -341,14 +341,14 @@ Tilemap:
 	db $04, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $07, $03, $03, $03, $03, $03, $03, 0,0,0,0,0,0,0,0,0,0,0,0
 .End:
 
-SECTION "Paddle", ROM0
-Paddle:
-    dw `13333331
-    dw `30000003
-    dw `13333331
-    dw `00000000
-    dw `00000000
-    dw `00000000
-    dw `00000000
-    dw `00000000
-.End:
+; SECTION "Paddle", ROM0
+; Paddle:
+;     dw `13333331
+;     dw `30000003
+;     dw `13333331
+;     dw `00000000
+;     dw `00000000
+;     dw `00000000
+;     dw `00000000
+;     dw `00000000
+; .End:
