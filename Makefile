@@ -1,5 +1,6 @@
-ROM     = unbrick.gb
-SRC     = main.asm
+ROM     = cartridge.gb
+SRCS    = main.asm
+INCS    = $(shell find src -name '*.asm') hardware.inc
 OBJ     = main.o
 ASM     = rgbasm
 LINK    = rgblink
@@ -10,8 +11,8 @@ FIXFLAGS  = -v -p 0xFF
 
 all: $(ROM)
 
-$(OBJ): $(SRC) hardware.inc
-	$(ASM) $(ASMFLAGS) -o $(OBJ) $(SRC)
+$(OBJ): $(SRCS) $(INCS)
+	$(ASM) $(ASMFLAGS) -o $(OBJ) $(SRCS)
 
 $(ROM): $(OBJ)
 	$(LINK) $(LINKFLAGS) -o $(ROM) $(OBJ)
