@@ -19,29 +19,29 @@ WaitVblank:
     ld a, 0
     ld [rLCDC], a
 
-; TitleScreen:
-;     ld de, Unbricked_Title_Screen_Tileset_Begin
-;     ld hl, $9000
-;     ld bc, Unbricked_Title_Screen_Tileset_End - Unbricked_Title_Screen_Tileset_Begin
-;     call MemCpy
+TitleScreen:
+    ld de, Unbricked_Title_Screen_Tileset_Begin
+    ld hl, $9000
+    ld bc, Unbricked_Title_Screen_Tileset_End - Unbricked_Title_Screen_Tileset_Begin
+    call MemCpy
 
-;     ld de, Unbricked_Title_Screen_Map_Begin
-;     ld hl, $9800
-;     ld bc, Unbricked_Title_Screen_Map_End - Unbricked_Title_Screen_Map_Begin
-;     call MemCpy
-;     ld a, LCDC_ON | LCDC_BG_ON
-;     ld [rLCDC], a
-;     ld a, %11100100
-;     ld [rBGP], a
+    ld de, Unbricked_Title_Screen_Map_Begin
+    ld hl, $9800
+    ld bc, Unbricked_Title_Screen_Map_End - Unbricked_Title_Screen_Map_Begin
+    call MemCpy
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+    ld a, %11100100
+    ld [rBGP], a
 
-; TitleScreenLoop:
-;     call UpdateKeys
-;     ld a, [wCurKeys]
-;     and PAD_START
-;     jr z, TitleScreenLoop
+TitleScreenLoop:
+    call UpdateKeys
+    ld a, [wCurKeys]
+    and PAD_START
+    jr z, TitleScreenLoop
 
-; 	ld a, 0
-; 	ld [rLCDC], a
+	ld a, 0
+	ld [rLCDC], a
 	
     ld de, Tiles
     ld hl, $9000
@@ -52,6 +52,9 @@ WaitVblank:
     ld hl, $9800
     ld bc, Tilemap.End - Tilemap
 	call MemCpy
+
+	ld a, 33
+	ld [wBrickCnt], a
 
     ld de, Paddle
     ld hl, $8000
@@ -157,7 +160,9 @@ Bounce_on_top:
 	ld a, [hl]
 	call IsWallTile
 	jp nz, BounceOnRight
+	ld d, 0
 	call CheckAndHandleBrick
+	inc d
 	ld a, 1
 	ld [wBallMomentumY], a
 BounceOnRight:
@@ -171,7 +176,9 @@ BounceOnRight:
     ld a, [hl]
     call IsWallTile
     jp nz, BounceOnLeft
+	ld e, 0
 	call CheckAndHandleBrick
+	inc e
     ld a, -1
     ld [wBallMomentumX], a
 
@@ -224,7 +231,20 @@ BounceDone:
     jp c, PaddleBounceDone
     ld a, -1
     ld [wBallMomentumY], a
+
+
 PaddleBounceDone:
+	ld a, [wBrickCnt]
+	cp a, 0
+	jp nz, CheckLeft
+
+WaitVblankWin:
+	ld a, [rLY]
+	cp a, 144
+	jr c, WaitVblankWin
+	ld a, 0
+	ld [rLCDC], a
+	jp TitleScreen
 
 
 CheckLeft:
@@ -337,6 +357,13 @@ CheckAndHandleBrick:
     ld [hl], BLANK_TILE
     inc hl
     ld [hl], BLANK_TILE
+
+	; the counter
+	ld a, [wBrickCnt]
+	dec a
+	ld [wBrickCnt], a
+	ret
+
 CheckAndHandleBrickRight:
     cp a, BRICK_RIGHT
     ret nz
@@ -344,6 +371,11 @@ CheckAndHandleBrickRight:
     ld [hl], BLANK_TILE
     dec hl
     ld [hl], BLANK_TILE
+
+	; the counter
+	ld a, [wBrickCnt]
+	dec a
+	ld [wBrickCnt], a
     ret
 
 IsWallTile:
@@ -420,22 +452,23 @@ Tiles:
 	dw `33322211
 	dw `33322211
 
-	dw `22222222
-	dw `20000000
-	dw `20111111
-	dw `20111111
-	dw `20111111
-	dw `20111111
-	dw `22222222
+	; brique
 	dw `33333333
-
-	dw `22222223
-	dw `00000023
-	dw `11111123
-	dw `11111123
-	dw `11111123
-	dw `11111123
-	dw `22222223
+	dw `30000000
+	dw `30111111
+	dw `30111111
+	dw `30111111
+	dw `30111111
+	dw `30111111
+	dw `33333333
+	; brique
+	dw `33333333
+	dw `00000003
+	dw `11111103
+	dw `11111103
+	dw `11111103
+	dw `11111103
+	dw `11111103
 	dw `33333333
 
 	dw `11222333
@@ -657,9 +690,268 @@ Tilemap:
 	db $04, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $07, $03, $03, $03, $03, $03, $03, 0,0,0,0,0,0,0,0,0,0,0,0
 	db $04, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $07, $03, $03, $03, $03, $03, $03, 0,0,0,0,0,0,0,0,0,0,0,0
 	db $04, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $07, $03, $03, $03, $03, $03, $03, 0,0,0,0,0,0,0,0,0,0,0,0
-
-
 .End:
+
+
+;
+;   TITLE SCREEN
+;
+
+Unbricked_Title_Screen_Tileset_Begin:
+
+; Tile $00 : Blanc
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+
+; ============================================================
+;  LETTRE "U"
+; ============================================================
+
+; Tile $01 : LETTRE U
+    dw `33000033
+    dw `33000033
+    dw `33000033
+    dw `33000033
+    dw `33000033
+    dw `33000033
+    dw `03333330
+    dw `00333300
+
+; Tile $02 : LETTRE N
+    dw `33000330
+    dw `33300330
+    dw `33330330
+    dw `33033330
+    dw `33003330
+    dw `33000330
+    dw `33000330
+    dw `33000330
+
+; Tile $03 : LETTRE B
+    dw `33333300
+    dw `33000330
+    dw `33000330
+    dw `33333300
+    dw `33333300
+    dw `33000330
+    dw `33000330
+    dw `33333300
+
+; Tile $04 : LETTRE R
+    dw `33333300
+    dw `33000330
+    dw `33000330
+    dw `33333300
+    dw `33033000
+    dw `33003300
+    dw `33000330
+    dw `33000033
+
+; Tile $05 : LETTRE I
+    dw `33333333
+    dw `00033000
+    dw `00033000
+    dw `00033000
+    dw `00033000
+    dw `00033000
+    dw `00033000
+    dw `03333333
+
+; Tile $06 : LETTRE C
+    dw `03333330
+    dw `33000000
+    dw `33000000
+    dw `33000000
+    dw `33000000
+    dw `33000000
+    dw `33000000
+    dw `03333330
+
+; Tile $07 : LETTRE K
+    dw `33000330
+    dw `33003300
+    dw `33033000
+    dw `33330000
+    dw `33330000
+    dw `33033000
+    dw `33003300
+    dw `33000330
+
+; Tile $08 : LETTRE E
+    dw `33333330
+    dw `33000000
+    dw `33000000
+    dw `33333000
+    dw `33333000
+    dw `33000000
+    dw `33000000
+    dw `33333330
+
+; Tile $09 : LETTRE D
+    dw `33333300
+    dw `33000330
+    dw `33000033
+    dw `33000033
+    dw `33000033
+    dw `33000033
+    dw `33000330
+    dw `33333300
+
+; ============================================================
+;  SÉPARATEUR
+; ============================================================
+
+; Tile $0A : Ligne
+    dw `00000000
+    dw `00000000
+    dw `33333333
+    dw `11111111
+    dw `11111111
+    dw `33333333
+    dw `00000000
+    dw `00000000
+
+; ============================================================
+; "PRESS START"
+; ============================================================
+
+; Tile $0B : Lettre P
+    dw `11111100
+    dw `11000110
+    dw `11000110
+    dw `11111100
+    dw `11000000
+    dw `11000000
+    dw `11000000
+    dw `00000000
+
+; Tile $0C : Lettre R
+    dw `11111100
+    dw `11000110
+    dw `11000110
+    dw `11111100
+    dw `11011000
+    dw `11001100
+    dw `11000110
+    dw `00000000
+
+; Tile $0D : Lettre E
+    dw `11111110
+    dw `11000000
+    dw `11000000
+    dw `11111100
+    dw `11000000
+    dw `11000000
+    dw `11111110
+    dw `00000000
+
+; Tile $0E : Lettre S
+    dw `01111110
+    dw `11000000
+    dw `11000000
+    dw `01111100
+    dw `00000110
+    dw `00000110
+    dw `11111100
+    dw `00000000
+
+; Tile $0F : Lettre " "
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+
+; Tile $10 : Lettre T
+    dw `11111110
+    dw `00110000
+    dw `00110000
+    dw `00110000
+    dw `00110000
+    dw `00110000
+    dw `00110000
+    dw `00000000
+
+; Tile $11 : Lettre A
+    dw `01111100
+    dw `11000110
+    dw `11000110
+    dw `11111110
+    dw `11000110
+    dw `11000110
+    dw `11000110
+    dw `00000000
+
+; Tile $12 : Lettre N
+    dw `11000110
+    dw `11100110
+    dw `11110110
+    dw `11011110
+    dw `11001110
+    dw `11000110
+    dw `11000110
+    dw `00000000
+
+	; brique
+	dw `33333333
+	dw `30000000
+	dw `30111111
+	dw `30111111
+	dw `30111111
+	dw `30111111
+	dw `30111111
+	dw `33333333
+	; brique
+	dw `33333333
+	dw `00000003
+	dw `11111103
+	dw `11111103
+	dw `11111103
+	dw `11111103
+	dw `11111103
+	dw `33333333
+Unbricked_Title_Screen_Tileset_End:
+
+
+Unbricked_Title_Screen_Map_Begin:
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+	; start of "UNBRICKED"
+	DB $01,$02,$03,$04,$05,$06,$07,$08,$09,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $93,$94,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+	;start of "PRESS START"
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+
+    DB $00,$00,$00,$00,$00,$00,$00,$00,$0B,$0C,$0D,$0E,$0E,$0F,$0E,$10,$11,$0C,$10,$00
+
+Unbricked_Title_Screen_Map_End:
+
+
 
 SECTION "Counter", WRAM0
 wFrameCounter: db
@@ -671,3 +963,6 @@ wNewKeys: db
 SECTION "Ball Data", WRAM0
 wBallMomentumX: db
 wBallMomentumY: db
+
+SECTION "Brick Data", WRAM0
+wBrickCnt: db
