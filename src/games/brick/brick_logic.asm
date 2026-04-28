@@ -12,6 +12,13 @@ CheckAndHandleBrick:
     ld [hl], BLANK_TILE
     inc hl
     ld [hl], BLANK_TILE
+
+	; the counter
+	ld a, [wBrickCnt]
+	dec a
+	ld [wBrickCnt], a
+	ret
+
 CheckAndHandleBrickRight:
     cp a, BRICK_RIGHT
     ret nz
@@ -19,6 +26,11 @@ CheckAndHandleBrickRight:
     ld [hl], BLANK_TILE
     dec hl
     ld [hl], BLANK_TILE
+
+	; the counter
+	ld a, [wBrickCnt]
+	dec a
+	ld [wBrickCnt], a
     ret
 
 IsWallTile:

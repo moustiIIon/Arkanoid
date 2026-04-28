@@ -1,6 +1,32 @@
 SECTION "Brick Game", ROM0
 
 BrickInit:
+
+TitleScreen:
+    ld de, Unbricked_Title_Screen_Tileset_Begin
+    ld hl, $9000
+    ld bc, Unbricked_Title_Screen_Tileset_End - Unbricked_Title_Screen_Tileset_Begin
+    call MemCpy
+
+    ld de, Unbricked_Title_Screen_Map_Begin
+    ld hl, $9800
+    ld bc, Unbricked_Title_Screen_Map_End - Unbricked_Title_Screen_Map_Begin
+    call MemCpy
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+    ld a, %11100100
+    ld [rBGP], a
+
+TitleScreenLoop:
+    call UpdateKeys
+    ld a, [wCurKeys]
+    and PAD_START
+    jr z, TitleScreenLoop
+
+	ld a, 0
+	ld [rLCDC], a
+
+
     ld de, Tiles
     ld hl, $9000
     ld bc, Tiles.End - Tiles
@@ -10,6 +36,10 @@ BrickInit:
     ld hl, $9800
     ld bc, Tilemap.End - Tilemap
     call MemCpy
+
+    ; ici = counter briques
+    ld a, 2
+	ld [wBrickCnt], a
 
     ld de, Paddle
     ld hl, $8000
@@ -170,8 +200,20 @@ BounceDone:
     jp c, PaddleBounceDone
     ld a, -1
     ld [wBallMomentumY], a
-PaddleBounceDone:
 
+
+PaddleBounceDone:
+	ld a, [wBrickCnt]
+	cp a, 0
+	jp nz, CheckLeft
+
+WaitVblankWin:
+	ld a, [rLY]
+	cp a, 144
+	jr c, WaitVblankWin
+	ld a, 0
+	ld [rLCDC], a
+	jp TitleScreen
 
 CheckLeft:
     ld a, [wCurKeys]
@@ -206,3 +248,6 @@ wFrameCounter: db
 SECTION "Ball Data", WRAM0
 wBallMomentumX: db
 wBallMomentumY: db
+
+SECTION "Brick Data", WRAM0
+wBrickCnt: db
