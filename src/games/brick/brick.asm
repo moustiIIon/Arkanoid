@@ -38,7 +38,7 @@ TitleScreenLoop:
     call MemCpy
 
     ; ici = counter briques
-    ld a, 2
+    ld a, 28
 	ld [wBrickCnt], a
 
     ld de, Paddle
