@@ -100,3 +100,19 @@ MemCpy:
     jp nz, MemCpy   ; tant que bc != 0, recommence
     ret
 ```
+
+## rLCDC - Picture Processing Unit
+
+Le registre rLCDC ($FF40)
+C'est le chef d'orchestre du PPU (Picture Processing Unit). Chaque bit de rLCDC active/désactive une fonctionnalité graphique :
+
+```
+bit 7 = LCD ON/OFF              ← LCDC_ON
+bit 6 = Window tilemap area
+bit 5 = Window enable
+bit 4 = BG/Window tile area
+bit 3 = BG tilemap area
+bit 2 = OBJ size (8x8 ou 8x16)
+bit 1 = OBJ (sprites) enable    ← LCDC_OBJ_ON
+bit 0 = BG enable               ← LCDC_BG_ON
+```
