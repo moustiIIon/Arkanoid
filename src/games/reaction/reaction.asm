@@ -39,19 +39,10 @@ ReactionInit:
     ;rLCDC = registre ($FF40) - chaque bit de rLCDC active/desac une fonctionnalité graphique, c'est du PPU
     ld [rLCDC], a
 
-
 ReactionLoop:
     ;wait vblank
-.waitOut:
-    ld a, [rLY]
-    cp 144
-    jp nc, .waitOut
-.waitIn:
-    ld a, [rLY]
-    cp 144
-    jp c, .waitIn
+    call MyWaitVBlank
     call UpdateKeys
-
     ;dispatch sur l'état courant
     ld a, [wReactionState]
     cp REACT_STATE_MENU
@@ -65,6 +56,7 @@ ReactionLoop:
     cp REACT_STATE_FAIL
     jp z, FailScreen
     jp ReactionLoop ;safety net : si état inconnu, on boucle
+
 
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto
