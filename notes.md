@@ -116,3 +116,9 @@ bit 2 = OBJ size (8x8 ou 8x16)
 bit 1 = OBJ (sprites) enable    ← LCDC_OBJ_ON
 bit 0 = BG enable               ← LCDC_BG_ON
 ```
+
+## Flags
+
+### Flag Carry (c)
+
+c'est un flag du registre f qu'on ne lit jms directement. Il est màj auto par certaines opérations

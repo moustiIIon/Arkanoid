@@ -57,6 +57,15 @@ ReactionLoop:
     jp z, FailScreen
     jp ReactionLoop ;safety net : si état inconnu, on boucle
 
+MenuScreen:
+    ld a, %00000000
+    ld [rBGP], a
+    ld a, [wNewKeys]
+    and a, PAD_A
+    jp z, ReactionLoop
+    ld a, REACT_STATE_DIFFICULTY
+    ld [wReactionState], a
+    jp ReactionLoop
 
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto
