@@ -1,3 +1,4 @@
+INCLUDE "hardware.inc"
 SECTION "Reaction Game", ROM0
 
 ;faire des constantes d'état pour avoir une meilleure lisibilité du code
@@ -13,7 +14,7 @@ DEF REACT_STATE_FAIL EQU 4
 ReactionInit:
     ;clear tilemap ($9800-$9BFF, 1024 octet)
     ;hl est le registre d'adresse de référence
-    ld hl, $9800 ;met l'adresse $9800 (début du tilemap en VRAM) dans hl
+    ld hl, TILEMAP0 ;met l'adresse $9800 (début du tilemap en VRAM) dans hl
     ld bc, 1024 ;bc = 1024, on utilise bc pour les compteurs par conventions
     xor a ;xor a = ld a, 0 mais pèse 1 octet au lieu de 2
 ;on remplit la vram de 0 pour la nettoyer et iniatiliser une variable d'état
@@ -58,14 +59,25 @@ ReactionLoop:
     jp ReactionLoop ;safety net : si état inconnu, on boucle
 
 MenuScreen:
-    ld a, %00000000
-    ld [rBGP], a
+    xor a ;a = 0 pour avoir la couleur blanche
+    ld [rBGP], a ;couleur blanc
+    ld a, [wNewKeys] ;a =0
+    and a, PAD_A ;a = 0, Z levé
+    jp z, ReactionLoop ;si A pas pressé, reboucle (=> continue)
+    ld a, REACT_STATE_DIFFICULTY ;a = 1, prépare l'état suivant
+    ld [wReactionState], a; wReactState = 1, on bascule
+    jp ReactionLoop
+
+DifficultyScreen:
+    ld a, %01010101  ; a = 0
+    ld [rBGP], a ;couleur gris
     ld a, [wNewKeys]
     and a, PAD_A
     jp z, ReactionLoop
-    ld a, REACT_STATE_DIFFICULTY
+    ld a, REACT_STATE_GAME
     ld [wReactionState], a
     jp ReactionLoop
+
 
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto
