@@ -69,7 +69,7 @@ MenuScreen:
     jp ReactionLoop
 
 DifficultyScreen:
-    ld a, %01010101  ; a = 0
+    ld a, %01010101  ; a = 1
     ld [rBGP], a ;couleur gris
     ld a, [wNewKeys]
     and a, PAD_A
@@ -78,6 +78,27 @@ DifficultyScreen:
     ld [wReactionState], a
     jp ReactionLoop
 
+GameScreen:
+    ld a, %10101010 ; a = 2
+    ld [rBGP], a ;gris foncé
+
+    ld a, [wNewKeys]
+    and a, PAD_A
+    jp nz, .toWin
+
+    ld a, [wNewKeys]
+    and a, PAD_B
+    jp nz, .toFail
+
+    jp ReactionLoop
+.toWin:
+    ld a, REACT_STATE_WIN
+    ld [wReactionState], a
+    jp ReactionLoop
+.toFail:
+    ld a, REACT_STATE_FAIL
+    ld [wReactionState], a
+    jp ReactionLoop
 
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto

@@ -32,7 +32,10 @@ WaitVblank:
 INCLUDE "src/core/memcpy.asm"
 INCLUDE "src/core/input.asm"
 INCLUDE "src/core/tile_lookup.asm"
+
 INCLUDE "src/games/brick/brick.asm"
 INCLUDE "src/games/brick/brick_logic.asm"
 INCLUDE "src/games/brick/brick_tiles.asm"
 INCLUDE "src/games/brick/brick_map.asm"
+
+INCLUDE "src/games/reaction/reaction.asm"
