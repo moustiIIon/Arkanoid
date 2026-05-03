@@ -48,7 +48,7 @@ GlobalMenuLoop:
     ; Vérifier START
     ld a, [wNewKeys]
     and PAD_START
-    jr nz, MenuConfirm
+    jr nz, MenuGameSelect
 
     jp GlobalMenuLoop
 
@@ -72,7 +72,7 @@ MenuMoveDown:
     call UpdateCursor
     jp GlobalMenuLoop
 
-MenuConfirm:
+MenuGameSelect:
     ld a, [wSelectedGame]
     cp a, 0
     jp z, LaunchArkanoid
