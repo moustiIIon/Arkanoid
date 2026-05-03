@@ -17,9 +17,20 @@ TitleScreen:
     ld a, %11100100
     ld [rBGP], a
 
-TitleScreenLoop:
+    ld a, 0
+    ld [wCurKeys], a
+    ld [wNewKeys], a
+
+; wait le start pour le menu, car sinon cela catch le enter du menu et fais sauter le title screen du arkanoid, donc ce n'etait pas bon, donc la condition est tesé et fonctionne correctement
+.waitCorrectStart:
     call UpdateKeys
     ld a, [wCurKeys]
+    and PAD_START
+    jr nz, .waitCorrectStart
+
+TitleScreenLoop:
+    call UpdateKeys
+    ld a, [wNewKeys]
     and PAD_START
     jr z, TitleScreenLoop
 
@@ -38,7 +49,7 @@ TitleScreenLoop:
     call MemCpy
 
     ; ici = counter briques
-    ld a, 28
+    ld a, 6
 	ld [wBrickCnt], a
 
     ld de, Paddle
