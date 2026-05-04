@@ -150,7 +150,7 @@ WaitVBlank2:
 ResetBall:
     ld a, 116
     ld [STARTOF(OAM) + 4], a
-    ld a, 40
+    ld a, 60
     ld [STARTOF(OAM) + 5], a
     ld a, 1
     ld [wBallMomentumX], a
