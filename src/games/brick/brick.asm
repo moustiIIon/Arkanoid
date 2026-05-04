@@ -34,6 +34,7 @@ TitleScreenLoop:
     and PAD_START
     jr z, TitleScreenLoop
 
+    call TransitionScreenToBlack
 	ld a, 0
 	ld [rLCDC], a
 
@@ -224,7 +225,7 @@ WaitVblankWin:
 	jr c, WaitVblankWin
 	ld a, 0
 	ld [rLCDC], a
-	jp TitleScreen
+	jp GlobalMenuInit
 
 CheckLeft:
     ld a, [wCurKeys]

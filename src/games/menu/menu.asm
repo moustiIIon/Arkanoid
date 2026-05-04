@@ -80,20 +80,26 @@ MenuGameSelect:
     jp z, LaunchArkanoid
     jp LaunchReact
 
+; transition comme pokemon red gameboy, pour transitionner vers les jeux chacun, petit a petit ecran noir
+; bon je penses ne pas faire comme pour un combat mais plus comme lorsque l'on rentre dans une grotte ou en passant par une porte donc
+; blanc, gris clairn, gris foncé et noir pour ensuite jump au jeu comme ca plus pratique et bonne transition gameboy visuelle c'est cool
+
 LaunchArkanoid:
+    ; ici transition
+    call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
     jp BrickInit
 
 LaunchReact:
+    ; ici transition
+    call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
     jp GlobalMenuInit 
     ; ici mettre le init de reatc quand il sera implementé
 
-; ============================================================================================================
 ; efface le curseur et dessine sur le bon jeu seclectionné
-; ============================================================================================================
 
 UpdateCursor:
     ld hl, $9884
@@ -117,8 +123,5 @@ UpdateCursor:
     ld [hl], a
     ret
 
-; ============================================================================================================
-; les variables
-; ============================================================================================================
 SECTION "Menu Variables", WRAM0
 wSelectedGame: db
