@@ -101,21 +101,24 @@ GameScreen:
     jp ReactionLoop
 
 WinScreen:
-    ld a, %11100100
-    ld [rBGP], a ; couleur gris foncéééééééé
-
-    ld a, [wNewKeys]
-    and a, PAD_SELECT
-    jp z, ReactionLoop
-
-FailScreen:
-    ld a, %11100100
-    ld [rBGP], a ; couleur gris foncéééééééé
-
+    ld a, %00000000
+    ld [rBGP], a
     ld a, [wNewKeys]
     and a, PAD_START
     jp z, ReactionLoop
+    ld a, REACT_STATE_MENU
+    ld [wReactionState], a
+    jp ReactionLoop
 
+FailScreen:
+    ld a, %11111111
+    ld [rBGP], a
+    ld a, [wNewKeys]
+    and a, PAD_START
+    jp z, ReactionLoop
+    ld a, REACT_STATE_MENU
+    ld [wReactionState], a
+    jp ReactionLoop
 
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto
