@@ -34,7 +34,7 @@ TitleScreenLoop:
     and PAD_START
     jr z, TitleScreenLoop
 
-    call TransitionScreenToBlack
+    call GameTransitionToStartFaster
 	ld a, 0
 	ld [rLCDC], a
 

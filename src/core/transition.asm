@@ -16,6 +16,21 @@ TransitionScreenToBlack:
     call TransitionWait
     ret
 
+GameTransitionToStartFaster:
+    ld a, %11100100
+    ldh [rBGP], a
+    call GameTransitionWait
+    ld a, %11111001
+    ldh [rBGP], a
+    call GameTransitionWait
+    ld a, %11111110
+    ldh [rBGP], a
+    call GameTransitionWait
+    ld a, %11111111
+    ldh [rBGP], a
+    call GameTransitionWait
+    ret
+
 TransitionWait:
     ; on attend "n" frame sinon trop rapide ou trop lent, on peut modifier ici comme par exemple 16 sera plus long
     ld b, 8
@@ -31,3 +46,19 @@ TransitionWait:
     dec b
     jr nz, .loop
     ret
+
+GameTransitionWait:
+    ld b, 3
+.loop:
+.GamewaitNotVBlank:
+    ldh a, [rLY]
+    cp 144
+    jp nc, .GamewaitNotVBlank
+.GamewaitVBlank:
+    ldh a, [rLY]
+    cp 144
+    jp c, .GamewaitVBlank
+    dec b
+    jr nz, .loop
+    ret
+
