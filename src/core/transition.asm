@@ -5,15 +5,12 @@ TransitionScreenToBlack:
     ld a, %11100100
     ldh [rBGP], a
     call TransitionWait
-
     ld a, %11111001
     ldh [rBGP], a
     call TransitionWait
-
     ld a, %11111110
     ldh [rBGP], a
     call TransitionWait
-
     ld a, %11111111
     ldh [rBGP], a
     call TransitionWait
