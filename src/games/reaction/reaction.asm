@@ -149,6 +149,22 @@ DrawDifficultyText:
     ld [hli], a ; écris S, hl++
     ld a, $10 ; Y
     ld [hli], a ; écris Y, hl++
+
+    ;MEDIUM
+    ld hl, $9907
+    ld a, $0D ; M
+    ld [hli], a ; écris M, hl++
+    ld a, $08 ; E
+    ld [hli], a ; écris E, hl++
+    ld a, $07 ; D
+    ld [hli], a ; écris D, hl++
+    ld a, $06 ; I
+    ld [hli], a ; écris I, hl++
+    ld a, $0F ; U
+    ld [hli], a ; écris E, hl++
+    ld a, $0D ; M
+    ld [hli], a ; écris M, hl++
+
     ret
 
 SECTION "Reaction State", WRAM0
