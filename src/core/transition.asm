@@ -1,4 +1,4 @@
-SECTION "Fade", ROM0
+SECTION "Transition", ROM0
 
 ; ecran de base jusqu'a la couleur noir
 TransitionScreenToBlack:
