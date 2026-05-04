@@ -137,6 +137,20 @@ FailScreen:
     ld [wReactionState], a
     jp ReactionLoop
 
+
+DrawDifficultyText:
+    ; écrit EASY
+    ld hl, $9888
+    ld a, $08 ; E
+    ld [hli], a ; écris E, hl++
+    ld a, $01 ; A
+    ld [hli], a ; écris A, hl++
+    ld a, $0E ; S
+    ld [hli], a ; écris S, hl++
+    ld a, $10 ; Y
+    ld [hli], a ; écris Y, hl++
+    ret
+
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto
 
