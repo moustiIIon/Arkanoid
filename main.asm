@@ -15,7 +15,7 @@ WaitVblank:
     ld a, 0
     ld [rLCDC], a
 
-    jp ReactionInit
+    jp GlobalMenuInit
 
 
 ; ============================================================================================================
@@ -40,3 +40,8 @@ INCLUDE "src/games/brick/brick_tiles.asm"
 INCLUDE "src/games/brick/brick_map.asm"
 
 INCLUDE "src/games/reaction/reaction.asm"
+
+INCLUDE "src/games/menu/menu.asm"
+INCLUDE "src/games/menu/menu_tiles.asm"
+INCLUDE "src/games/menu/menu_map.asm"
+INCLUDE "src/core/transition.asm"

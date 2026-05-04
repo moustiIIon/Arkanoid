@@ -20,6 +20,7 @@ ReactionInit:
 ;on remplit la vram de 0 pour la nettoyer et iniatiliser une variable d'état
 ;c un label local qui existera que dans le scope de ReactionInit et ne va pas override dans d'autres labels de d'autres fichiers (c une fct pv)
 .clearTilemap:
+    xor a
     ld [hli], a ;ecrit a dans la mémoire pointée par hl et va l'incrémenter ensuite. Donc 1 octet de plus à 0 en VRAM
     dec bc ;decremente bc dcp bc = 1023. Il ne màj pas le flag z
     ld a, b ;copie b dans a
@@ -34,6 +35,7 @@ ReactionInit:
     xor a
     ld [wCurKeys], a
     ld [wNewKeys], a
+    ld [wDifficultyDrawn], a
 
     ;allumer lcd background
     ld a, LCDC_ON | LCDC_BG_ON
@@ -69,14 +71,29 @@ MenuScreen:
     jp ReactionLoop
 
 DifficultyScreen:
-    ld a, %01010101  ; a = 1
+    ; palette
+    ld a, %11100100  ; a = 1
     ld [rBGP], a ;couleur gris
+    ; dessiner
+    ld a, [wDifficultyDrawn]
+    cp 0
+    jp nz, .skipDraw
+    
+    call DrawDifficultyText ; draw EASY pr l'instant
+    ld a, 1
+    ld [wDifficultyDrawn], a
+.skipDraw:
     ld a, [wNewKeys]
     and a, PAD_A
     jp z, ReactionLoop
+
+    ;transition vers GAME
+    xor a
+    ld [wDifficultyDrawn], a
     ld a, REACT_STATE_GAME
     ld [wReactionState], a
     jp ReactionLoop
+
 
 GameScreen:
     ld a, %10101010 ; a = 2
@@ -122,3 +139,6 @@ FailScreen:
 
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto
+
+SECTION "Reaction Difficulty Vars", WRAM0
+wDifficultyDrawn: db
