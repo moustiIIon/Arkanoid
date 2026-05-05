@@ -51,8 +51,12 @@ TitleScreenLoop:
     call MemCpy
 
     ; ici = counter briques
-    ld a, 6
+    ld a, 28
 	ld [wBrickCnt], a
+
+    ld a, 0
+    ld [wScore], a
+    call UpdateScoreDisplay
 
     ld de, Paddle
     ld hl, $8000
@@ -295,6 +299,7 @@ wBallMomentumY: db
 
 SECTION "Brick Data", WRAM0
 wBrickCnt: db
+wScore: db
 
 SECTION "Game Over Data", WRAM0
 wCntBallUnderPaddle: db
