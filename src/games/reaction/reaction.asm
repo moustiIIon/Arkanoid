@@ -32,11 +32,13 @@ ReactionInit:
 
     ;reset les input
     ;lors du boot la WRAM contient du garbage puisque la WRAM n'est pas init par le hardware
+    ;init tous les élém de la WRAM pour ne pas boot dans le garbage
     xor a
     ld [wCurKeys], a
     ld [wNewKeys], a
     ld [wDifficultyDrawn], a
     ld [wSelectedDifficulty], a
+    ld [wWinDrawn], a
 
     ;allumer lcd background
     ld a, LCDC_ON | LCDC_BG_ON
@@ -295,12 +297,25 @@ GameScreen:
 WinScreen:
     ld a, LCDC_ON | LCDC_BG_ON
     ld [rLCDC], a
-    ld a, %00000000
+    ld a, %11100100
     ld [rBGP], a
 
+    ld a, [wWinDrawn]
+    cp 0
+    jr nz, .skipWin
+    ld hl, $9907
+    ld a, $11 ; W
+    ld [hli], a ; ecrit W et hl++
+    ld a, $06 ; I
+    ld [hli], a ; ecrit I et hl++
+    ld a, $04 ; N
+    ld [hli], a ; ecrit N et hl++
+.skipWin:
     ld a, [wNewKeys]
     and a, PAD_START
     jp z, ReactionLoop
+    xor a
+    ld [wWinDrawn], a
     ld a, REACT_STATE_MENU
     ld [wReactionState], a
     jp ReactionLoop
