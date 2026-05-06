@@ -200,5 +200,14 @@ Menu_Tileset_Begin:
     dw `00033000
     dw `00000000
 
+; Tile $11 : Lettre W
+    dw `33000330
+    dw `33000330
+    dw `33000330
+    dw `33030330
+    dw `33333330
+    dw `33303330
+    dw `33000330
+    dw `00000000
 
 Menu_Tileset_End:

@@ -80,7 +80,7 @@ DifficultyScreen:
     cp 0
     jp nz, .skipDraw
     
-    call DrawDifficultyText ; draw EASY pr l'instant
+    call DrawDifficultyText
     ld a, 1
     ld [wDifficultyDrawn], a
 .skipDraw:
@@ -205,9 +205,99 @@ GameScreenInit:
     ld [$FE02], a
     ret
 
+GameScreen:
+    ; init une seule fois
+    ld a, [wGameInitDone]
+    cp 0
+    jr nz, .alreadyInit
+    call GameScreenInit
+    ld a, 1
+    ld [wGameInitDone], a
+.alreadyInit:
+    ; check A
+    ld a, [wNewKeys]
+    and a, PAD_A
+    jr z, .notA
+    ld a, [wCurrentButton]
+    cp 0
+    jp z, .correct
+    jp .wrong
+.notA:
+    ; check B
+    ld a, [wNewKeys]
+    and a, PAD_B
+    jr z, .notB
+    ld a, [wCurrentButton]
+    cp 1
+    jp z, .correct
+    jp .wrong
+.notB:
+    ; check UP
+    ld a, [wNewKeys]
+    and a, PAD_UP
+    jr z, .notUp
+    ld a, [wCurrentButton]
+    cp 2
+    jp z, .correct
+    jp .wrong
+.notUp:
+    ; check DOWN
+    ld a, [wNewKeys]
+    and a, PAD_DOWN
+    jr z, .notDown
+    ld a, [wCurrentButton]
+    cp 3
+    jp z, .correct
+    jp .wrong
+.notDown:
+    ; check LEFT
+    ld a, [wNewKeys]
+    and a, PAD_LEFT
+    jr z, .notLeft
+    ld a, [wCurrentButton]
+    cp 4
+    jp z, .correct
+    jp .wrong
+.notLeft:
+    ; check RIGHT
+    ld a, [wNewKeys]
+    and a, PAD_RIGHT
+    jp z, ReactionLoop
+    ld a, [wCurrentButton]
+    cp 5
+    jp z, .correct
+    jp .wrong
+.correct:
+    ld a, [wRoundCount]
+    inc a
+    ld [wRoundCount], a
+    cp 25
+    jp z, .win
+    ; prochain bouton
+.pickNext:
+    ld a, [rDIV]
+    and $07
+    cp 6
+    jr nc, .pickNext
+    ld [wCurrentButton], a
+    ld [$FE02], a
+    jp ReactionLoop
+.win:
+    ld a, REACT_STATE_WIN
+    ld [wReactionState], a
+    jp ReactionLoop
+
+.wrong:
+    ld a, REACT_STATE_FAIL
+    ld [wReactionState], a
+    jp ReactionLoop
+
 WinScreen:
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
     ld a, %00000000
     ld [rBGP], a
+
     ld a, [wNewKeys]
     and a, PAD_START
     jp z, ReactionLoop
@@ -216,6 +306,8 @@ WinScreen:
     jp ReactionLoop
 
 FailScreen:
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
     ld a, %11111111
     ld [rBGP], a
     ld a, [wNewKeys]
@@ -274,3 +366,4 @@ wSelectedDifficulty: db
 wGameInitDone: db ; 0 = pas encore init, 1 = déjà init
 wCurrentButton: db ; 0=A 1=B 2=UP 3=DOWN 4=LEFT 5=RIGHT
 wRoundCount: db ; 0 à 24
+wWinDrawn: db
