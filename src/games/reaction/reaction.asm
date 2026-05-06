@@ -324,14 +324,28 @@ WinScreen:
 FailScreen:
     ld a, LCDC_ON | LCDC_BG_ON
     ld [rLCDC], a
-    ld a, %11111111
+    ; ld a, %11111111
+    ld a, %11100100
     ld [rBGP], a
 
-
+    ld a, [wFailDrawn]
+    cp 0
+    jr nz, .skipFail
+    ld hl, $9907
+    ld a, $12 ; F
+    ld [hli], a ; ecrit F et hl++
+    ld a, $01 ; A
+    ld [hli], a ; ecrit A et hl++
+    ld a, $06 ; I
+    ld [hli], a ; ecrit I et hl++
+    ld a, $13 ; L
+    ld [hli], a ; ecrit L et hl++
 .skipFail:    
     ld a, [wNewKeys]
     and a, PAD_START
     jp z, ReactionLoop
+    xor a
+    ld [wFailDrawn], a
     ld a, REACT_STATE_MENU
     ld [wReactionState], a
     jp ReactionLoop
