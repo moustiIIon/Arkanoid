@@ -36,6 +36,7 @@ ReactionInit:
     ld [wCurKeys], a
     ld [wNewKeys], a
     ld [wDifficultyDrawn], a
+    ld [wSelectedDifficulty], a
 
     ;allumer lcd background
     ld a, LCDC_ON | LCDC_BG_ON
@@ -84,9 +85,28 @@ DifficultyScreen:
     ld [wDifficultyDrawn], a
 .skipDraw:
     ld a, [wNewKeys]
+    and a, PAD_UP
+    jr z, .checkDown
+    ld a, [wSelectedDifficulty]
+    cp 0
+    jr z, .checkDown
+    dec a
+    ld [wSelectedDifficulty], a
+.checkDown:
+    ld a, [wNewKeys]
+    and a, PAD_DOWN
+    jr z, .doCursor
+    ld a, [wSelectedDifficulty]
+    cp 2
+    jr z, .doCursor
+    inc a
+    ld [wSelectedDifficulty], a
+.doCursor:
+    call DrawDifficultyCursor
+
+    ld a, [wNewKeys]
     and a, PAD_A
     jp z, ReactionLoop
-
     ;transition vers GAME
     xor a
     ld [wDifficultyDrawn], a
@@ -94,6 +114,35 @@ DifficultyScreen:
     ld [wReactionState], a
     jp ReactionLoop
 
+DrawDifficultyCursor:
+    ;erase les 3 dernieres positions
+    xor a
+    ld hl, $9887
+    ld [hl], a
+    ld hl, $9906
+    ld [hl], a
+    ld hl, $9987
+    ld [hl], a
+
+    ld a, [wSelectedDifficulty]
+    cp 0
+    jr z, .easy
+    cp 1
+    jr z, .medium
+    cp 2
+    jr z, .hard
+.hard:
+    ld hl, $9987
+    jr .draw
+.medium:
+    ld hl, $9906
+    jr .draw
+.easy:
+    ld hl, $9887
+.draw:
+    ld a, $0B
+    ld [hl], a
+    ret    
 
 GameScreen:
     ld a, %10101010 ; a = 2
@@ -175,8 +224,6 @@ DrawDifficultyText:
     ld [hli], a ; écris R, hl++
     ld a, $07 ; D
     ld [hli], a ; écris D, hl++
-
-
     ret
 
 SECTION "Reaction State", WRAM0
@@ -184,3 +231,4 @@ wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adr
 
 SECTION "Reaction Difficulty Vars", WRAM0
 wDifficultyDrawn: db
+wSelectedDifficulty: db
