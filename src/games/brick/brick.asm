@@ -17,12 +17,25 @@ TitleScreen:
     ld a, %11100100
     ld [rBGP], a
 
-TitleScreenLoop:
+    ld a, 0
+    ld [wCurKeys], a
+    ld [wNewKeys], a
+    ld [wCntBallUnderPaddle], a
+
+; wait le start pour le menu, car sinon cela catch le enter du menu et fais sauter le title screen du arkanoid, donc ce n'etait pas bon, donc la condition est tesé et fonctionne correctement
+.waitCorrectStart:
     call UpdateKeys
     ld a, [wCurKeys]
     and PAD_START
+    jr nz, .waitCorrectStart
+
+TitleScreenLoop:
+    call UpdateKeys
+    ld a, [wNewKeys]
+    and PAD_START
     jr z, TitleScreenLoop
 
+    call GameTransitionToStartFaster
 	ld a, 0
 	ld [rLCDC], a
 
@@ -38,7 +51,7 @@ TitleScreenLoop:
     call MemCpy
 
     ; ici = counter briques
-    ld a, 28
+    ld a, 6
 	ld [wBrickCnt], a
 
     ld de, Paddle
@@ -122,6 +135,37 @@ WaitVBlank2:
     call UpdateKeys
 
 
+; ici on va check si la balle est dessous du paddle donc la mort =
+; game over on a perdu et ensuite on aura juste a faire le score pour le leaderboard etc
+    ld a, [STARTOF(OAM) + 4]
+    cp a, 176
+    jp c, Bounce_on_top
+
+    ld a, [wCntBallUnderPaddle]
+    inc a
+    ld [wCntBallUnderPaddle], a
+    cp a, 2
+    jp z, ThisIsGameOver
+
+ResetBall:
+    ld a, 116
+    ld [STARTOF(OAM) + 4], a
+    ld a, 60
+    ld [STARTOF(OAM) + 5], a
+    ld a, 1
+    ld [wBallMomentumX], a
+    ld a, -1
+    ld [wBallMomentumY], a
+    jp Main
+
+ThisIsGameOver:
+    call TransitionScreenToBlack
+    ld a, 0
+    ld [rLCDC], a
+    jp BrickInit
+
+
+
 Bounce_on_top:
     ld a, [STARTOF(OAM) + 4]
     sub a, 16 + 1
@@ -161,25 +205,25 @@ BounceOnLeft:
     call GetTileByPixel
     ld a, [hl]
     call IsWallTile
-    jp nz, BounceOnBottom
+    jp nz, BounceDone
     call CheckAndHandleBrick
     ld a, 1
     ld [wBallMomentumX], a
 
-BounceOnBottom:
-    ld a, [STARTOF(OAM) + 4]
-    sub a, 16 - 1
-    ld c, a
-    ld a, [STARTOF(OAM) + 5]
-    sub a, 8
-    ld b, a
-    call GetTileByPixel
-    ld a, [hl]
-    call IsWallTile
-    jp nz, BounceDone
-    call CheckAndHandleBrick
-    ld a, -1
-    ld [wBallMomentumY], a
+; BounceOnBottom:
+;     ld a, [STARTOF(OAM) + 4]
+;     sub a, 16 - 1
+;     ld c, a
+;     ld a, [STARTOF(OAM) + 5]
+;     sub a, 8
+;     ld b, a
+;     call GetTileByPixel
+;     ld a, [hl]
+;     call IsWallTile
+;     jp nz, BounceDone
+;     call CheckAndHandleBrick
+;     ld a, -1
+;     ld [wBallMomentumY], a
 
 
 BounceDone:
@@ -213,7 +257,7 @@ WaitVblankWin:
 	jr c, WaitVblankWin
 	ld a, 0
 	ld [rLCDC], a
-	jp TitleScreen
+	jp GlobalMenuInit
 
 CheckLeft:
     ld a, [wCurKeys]
@@ -251,3 +295,6 @@ wBallMomentumY: db
 
 SECTION "Brick Data", WRAM0
 wBrickCnt: db
+
+SECTION "Game Over Data", WRAM0
+wCntBallUnderPaddle: db

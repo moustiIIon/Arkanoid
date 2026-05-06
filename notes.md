@@ -32,7 +32,7 @@ Tiles:
 Dans `33322222 le backtick lui dit "interprète les 8 chiffres comme les 8 pixels d'une ligne, chacun étant la couleur 0/1/2/3". Le dw (define word = 2 octets) encode les 2 bits par pixel sur les 8 pixels.
 
 ### tilemap
-écran de fond, c'est une grille de 32x32 tiles soit 256x256 pixels 
+écran de fond, c'est une grille de 32x32 tiles soit 256x256 pixels soit 1024 octets stockés séquentiellement en mémoire
 Une case de la tilemap est 1 octet = l'index de la tile à afficher
 la tilemap vit aussi en VRAM à $9800-$9BFF
 
@@ -46,6 +46,19 @@ Chaque ligne = 32 octets (largeur d'une rangée du tilemap)
 Le $05 signifie "c'est ici on dessine la tile n°5" qui est destinée à Tiles + 5*16
 
 note: seulement 160×144 pixels visibles
+
+### calcul pour écrire sur n lignes n colonnes
+On regarde le tableau en 2D 32x32
+L'expression pour avoir l'adresse de la case se calcule de cette manière:
+- adresse = base + (ligne * 32) + colonne
+Où:
+- base = $9800
+- ligne * 32 -> on saute 32 octets par ligne pr descendre
+- colonne -> on aance de qq octets sur la ligne
+Exemple: $9800  + (4 × 32)  + 8
+- 4 * 32 = 128 -> 128 + 8 = 136
+- Convert Hexa : 136 <=> $88
+- Résultat : $9888
 
 ### sprites / OAM (Object Attribute Memory) <=> objets mobiles
 tiles + tilemap = décor fixe
@@ -100,3 +113,25 @@ MemCpy:
     jp nz, MemCpy   ; tant que bc != 0, recommence
     ret
 ```
+
+## rLCDC - Picture Processing Unit
+
+Le registre rLCDC ($FF40)
+C'est le chef d'orchestre du PPU (Picture Processing Unit). Chaque bit de rLCDC active/désactive une fonctionnalité graphique :
+
+```
+bit 7 = LCD ON/OFF              ← LCDC_ON
+bit 6 = Window tilemap area
+bit 5 = Window enable
+bit 4 = BG/Window tile area
+bit 3 = BG tilemap area
+bit 2 = OBJ size (8x8 ou 8x16)
+bit 1 = OBJ (sprites) enable    ← LCDC_OBJ_ON
+bit 0 = BG enable               ← LCDC_BG_ON
+```
+
+## Flags
+
+### Flag Carry (c)
+
+c'est un flag du registre f qu'on ne lit jms directement. Il est màj auto par certaines opérations
