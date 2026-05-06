@@ -40,6 +40,7 @@ INCLUDE "src/games/brick/brick_tiles.asm"
 INCLUDE "src/games/brick/brick_map.asm"
 
 INCLUDE "src/games/reaction/reaction.asm"
+INCLUDE "src/games/reaction/reaction_sprites.asm"
 
 INCLUDE "src/games/menu/menu.asm"
 INCLUDE "src/games/menu/menu_tiles.asm"

@@ -110,6 +110,8 @@ DifficultyScreen:
     ;transition vers GAME
     xor a
     ld [wDifficultyDrawn], a
+    ld [wGameInitDone], a
+    ld [wRoundCount], a
     ld a, REACT_STATE_GAME
     ld [wReactionState], a
     jp ReactionLoop
@@ -142,7 +144,50 @@ DrawDifficultyCursor:
 .draw:
     ld a, $0B
     ld [hl], a
-    ret    
+    ret
+
+GameScreenInit:
+    ;load les tiles sprites
+    ld de, Reaction_Sprite_Tiles_Begin
+    ld hl, $8000
+    ld bc, Reaction_Sprite_Tiles_End - Reaction_Sprite_Tiles_Begin
+    call MemCpy
+
+    ;vider OAM
+    ld hl, $FE00
+    ld b, 160
+    xor a
+.clearGame
+    ld [hli], a
+    dec b
+    jr nz, .clearGame
+    ; placer le sprite 0 au centre de l'écran
+    ld hl, $FE00
+    ld a, 84 ; Y = 68 + 16
+    ld [hli], a
+    ld a, 84 ; X = 76 + 8
+    ld [hli], a
+    ld a, 0 ; tile index (modifié après)
+    ld [hli], a
+    ld a, 0 ; flags
+    ld [hli], a
+
+    ; activer les sprites
+    ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
+    ld [rLCDC], a
+    ld a, %11100100
+    ld [rOBP0], a
+
+    ; choisir un bouton aléatoire via rDIV
+.pickButton:
+    ld a, [rDIV]
+    and $07
+    cp 6
+    jr nc, .pickButton  ; si >= 6, réessaie
+    ld [wCurrentButton], a
+    ld [$FE02], a ;met le tile index dans l'OAM
+    ret
+
 
 GameScreen:
     ld a, %10101010 ; a = 2
@@ -232,3 +277,6 @@ wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adr
 SECTION "Reaction Difficulty Vars", WRAM0
 wDifficultyDrawn: db
 wSelectedDifficulty: db
+wGameInitDone: db ; 0 = pas encore init, 1 = déjà init
+wCurrentButton: db ; 0=A 1=B 2=UP 3=DOWN 4=LEFT 5=RIGHT
+wRoundCount: db ; 0 à 24
