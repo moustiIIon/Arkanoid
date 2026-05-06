@@ -39,6 +39,7 @@ ReactionInit:
     ld [wDifficultyDrawn], a
     ld [wSelectedDifficulty], a
     ld [wWinDrawn], a
+    ld [wFailDrawn], a
 
     ;allumer lcd background
     ld a, LCDC_ON | LCDC_BG_ON
@@ -325,6 +326,9 @@ FailScreen:
     ld [rLCDC], a
     ld a, %11111111
     ld [rBGP], a
+
+
+.skipFail:    
     ld a, [wNewKeys]
     and a, PAD_START
     jp z, ReactionLoop
@@ -382,3 +386,4 @@ wGameInitDone: db ; 0 = pas encore init, 1 = déjà init
 wCurrentButton: db ; 0=A 1=B 2=UP 3=DOWN 4=LEFT 5=RIGHT
 wRoundCount: db ; 0 à 24
 wWinDrawn: db
+wFailDrawn: db
