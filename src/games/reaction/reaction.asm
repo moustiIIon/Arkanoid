@@ -324,14 +324,13 @@ WinScreen:
 FailScreen:
     ld a, LCDC_ON | LCDC_BG_ON
     ld [rLCDC], a
-    ; ld a, %11111111
     ld a, %11100100
     ld [rBGP], a
 
     ld a, [wFailDrawn]
     cp 0
     jr nz, .skipFail
-    ld hl, $9907
+    ld hl, $9908
     ld a, $12 ; F
     ld [hli], a ; ecrit F et hl++
     ld a, $01 ; A

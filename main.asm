@@ -29,6 +29,8 @@ WaitVblank:
 ;
 ; ============================================================================================================
 
+INCLUDE "src/assets/tiles.asm"
+
 INCLUDE "src/core/memcpy.asm"
 INCLUDE "src/core/input.asm"
 INCLUDE "src/core/tile_lookup.asm"
@@ -43,6 +45,5 @@ INCLUDE "src/games/reaction/reaction.asm"
 INCLUDE "src/games/reaction/reaction_sprites.asm"
 
 INCLUDE "src/games/menu/menu.asm"
-INCLUDE "src/games/menu/menu_tiles.asm"
 INCLUDE "src/games/menu/menu_map.asm"
 INCLUDE "src/core/transition.asm"

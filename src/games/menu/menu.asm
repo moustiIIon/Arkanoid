@@ -1,9 +1,9 @@
 SECTION "Menu", ROM0
 
 GlobalMenuInit:
-    ld de, Menu_Tileset_Begin
+    ld de, Shared_Tileset_Begin
     ld hl, $9000
-    ld bc, Menu_Tileset_End - Menu_Tileset_Begin
+    ld bc, Shared_Tileset_End - Shared_Tileset_Begin
     call MemCpy
 
     ld de, Menu_Map_Begin
