@@ -147,34 +147,51 @@ DrawDifficultyCursor:
     ret
 
 GameScreenInit:
-    ;load les tiles sprites
+    ; éteindre LCD pour écrire VRAM + OAM librement
+    xor a
+    ld [rLCDC], a
+    ; vider le tilemap
+    ld hl, TILEMAP0
+    ld bc, 1024
+.clearMap:
+    xor a
+    ld [hli], a
+    dec bc
+    ld a, b
+    or a, c
+    jp nz, .clearMap
+
+    ; charger les tiles sprites à $8000
     ld de, Reaction_Sprite_Tiles_Begin
     ld hl, $8000
     ld bc, Reaction_Sprite_Tiles_End - Reaction_Sprite_Tiles_Begin
     call MemCpy
 
-    ;vider OAM
+    ; vider OAM
     ld hl, $FE00
     ld b, 160
     xor a
-.clearGame
+.clearOam:
     ld [hli], a
     dec b
-    jr nz, .clearGame
+    jr nz, .clearOam
+
     ; placer le sprite 0 au centre de l'écran
     ld hl, $FE00
     ld a, 84 ; Y = 68 + 16
     ld [hli], a
     ld a, 84 ; X = 76 + 8
     ld [hli], a
-    ld a, 0 ; tile index (modifié après)
+    ld a, 0 ; tile index
     ld [hli], a
     ld a, 0 ; flags
     ld [hli], a
 
-    ; activer les sprites
+    ; rallumer LCD avec sprites
     ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
     ld [rLCDC], a
+    ld a, %11100100
+    ld [rBGP], a
     ld a, %11100100
     ld [rOBP0], a
 
@@ -183,33 +200,10 @@ GameScreenInit:
     ld a, [rDIV]
     and $07
     cp 6
-    jr nc, .pickButton  ; si >= 6, réessaie
+    jr nc, .pickButton
     ld [wCurrentButton], a
-    ld [$FE02], a ;met le tile index dans l'OAM
+    ld [$FE02], a
     ret
-
-
-GameScreen:
-    ld a, %10101010 ; a = 2
-    ld [rBGP], a ;gris foncé
-
-    ld a, [wNewKeys]
-    and a, PAD_A
-    jp nz, .toWin
-
-    ld a, [wNewKeys]
-    and a, PAD_B
-    jp nz, .toFail
-
-    jp ReactionLoop
-.toWin:
-    ld a, REACT_STATE_WIN
-    ld [wReactionState], a
-    jp ReactionLoop
-.toFail:
-    ld a, REACT_STATE_FAIL
-    ld [wReactionState], a
-    jp ReactionLoop
 
 WinScreen:
     ld a, %00000000
