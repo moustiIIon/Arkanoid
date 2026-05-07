@@ -190,14 +190,6 @@ GameScreenInit:
     ld a, 0 ; flags
     ld [hli], a
 
-    ; rallumer LCD avec sprites
-    ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
-    ld [rLCDC], a
-    ld a, %11100100
-    ld [rBGP], a
-    ld a, %11100100
-    ld [rOBP0], a
-
     ; choisir un bouton aléatoire via rDIV
 .pickButton:
     ld a, [rDIV]
@@ -206,6 +198,15 @@ GameScreenInit:
     jr nc, .pickButton
     ld [wCurrentButton], a
     ld [$FE02], a
+
+    ; rallumer LCD avec sprites
+    ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
+    ld [rLCDC], a
+    ld a, %11100100
+    ld [rBGP], a
+    ld a, %11100100
+    ld [rOBP0], a
+
     ;reset timer
     xor a
     ld [wFrameTimer], a
@@ -220,6 +221,9 @@ GameScreen:
     ld a, 1
     ld [wGameInitDone], a
 .alreadyInit:
+    ; sync sprite OAM en VBlank
+    ld a, [wCurrentButton]
+    ld [$FE02], a
     ;frame timer
     ld a, [wFrameTimer]
     inc a
@@ -310,7 +314,6 @@ GameScreen:
     cp 6
     jr nc, .pickNext
     ld [wCurrentButton], a
-    ld [$FE02], a
     jp ReactionLoop
 .win:
     ld a, REACT_STATE_WIN
@@ -331,7 +334,7 @@ WinScreen:
     ld a, [wWinDrawn]
     cp 0
     jr nz, .skipWin
-    ld hl, $9907
+    ld hl, $9909
     ld a, TILE_W ; W
     ld [hli], a ; ecrit W et hl++
     ld a, TILE_I ; I
