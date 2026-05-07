@@ -197,6 +197,21 @@ GameScreenInit:
     ld a, 0 ; flags
     ld [hli], a
 
+    ; vider la window tilemap ($9C00, 32 octets = 1 ligne)
+    ld hl, $9C00
+    ld b, 32
+    xor a
+.clearWinMap:
+    ld [hli], a
+    dec b
+    jr nz, .clearWinMap
+
+    ; config HUD nb de round en bas
+    ld a, 136 ; window commence à la ligne 136 (1 tile row)
+    ld [rWY], a
+    ld a, 7 ; WX=7 → démarre à X=0
+    ld [rWX], a
+
     ; choisir un bouton aléatoire via rDIV
 .pickButton:
     ld a, [rDIV]
@@ -206,8 +221,8 @@ GameScreenInit:
     ld [wCurrentButton], a
     ld [$FE02], a
 
-    ; rallumer LCD avec sprites
-    ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
+    ; rallumer LCD avec sprites + window
+    ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON | LCDC_WIN_ON | LCDC_WIN_9C00
     ld [rLCDC], a
     ld a, %11100100
     ld [rBGP], a
@@ -387,7 +402,6 @@ FailScreen:
     ld [wReactionState], a
     jp ReactionLoop
 
-
 DrawDifficultyText:
     ; écrit EASY
     ld hl, $9888
@@ -441,7 +455,7 @@ DrawRoundCounter:
 .divDone:
     ld c, a ; c = unité
 
-    ld hl, $9809 ; row 0, col 9
+    ld hl, $9C09 ; window tilemap, col 9
     ld a, b
     add a, TILE_0
     ld [hli], a
