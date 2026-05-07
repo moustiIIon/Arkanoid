@@ -206,6 +206,9 @@ GameScreenInit:
     jr nc, .pickButton
     ld [wCurrentButton], a
     ld [$FE02], a
+    ;reset timer
+    xor a
+    ld [wFrameTimer], a
     ret
 
 GameScreen:
@@ -217,6 +220,28 @@ GameScreen:
     ld a, 1
     ld [wGameInitDone], a
 .alreadyInit:
+    ;frame timer
+    ld a, [wFrameTimer]
+    inc a
+    ld [wFrameTimer], a
+    ld b, a ; b = current timer
+    ;gestion difficulté
+    ld a, [wSelectedDifficulty]
+    cp 0
+    jr nz, .notEasy
+    ld a, 120
+    jr .checkTimeout
+.notEasy:
+    cp 1
+    jr nz, .notMedium
+    ld a, 60
+    jr .checkTimeout
+.notMedium:
+    ld a, 30
+.checkTimeout:
+    cp b ; seuil - timer
+    jp c, .wrong ; carry = seuil < timer => temps écoulé
+
     ; check A
     ld a, [wNewKeys]
     and a, PAD_A
@@ -271,6 +296,8 @@ GameScreen:
     jp z, .correct
     jp .wrong
 .correct:
+    xor a
+    ld [wFrameTimer], a
     ld a, [wRoundCount]
     inc a
     ld [wRoundCount], a
@@ -305,11 +332,11 @@ WinScreen:
     cp 0
     jr nz, .skipWin
     ld hl, $9907
-    ld a, $11 ; W
+    ld a, TILE_W ; W
     ld [hli], a ; ecrit W et hl++
-    ld a, $06 ; I
+    ld a, TILE_I ; I
     ld [hli], a ; ecrit I et hl++
-    ld a, $04 ; N
+    ld a, TILE_N ; N
     ld [hli], a ; ecrit N et hl++
 .skipWin:
     ld a, [wNewKeys]
@@ -331,13 +358,13 @@ FailScreen:
     cp 0
     jr nz, .skipFail
     ld hl, $9908
-    ld a, $12 ; F
+    ld a, TILE_F ; F
     ld [hli], a ; ecrit F et hl++
-    ld a, $01 ; A
+    ld a, TILE_A ; A
     ld [hli], a ; ecrit A et hl++
-    ld a, $06 ; I
+    ld a, TILE_I ; I
     ld [hli], a ; ecrit I et hl++
-    ld a, $13 ; L
+    ld a, TILE_L ; L
     ld [hli], a ; ecrit L et hl++
 .skipFail:    
     ld a, [wNewKeys]
@@ -353,39 +380,39 @@ FailScreen:
 DrawDifficultyText:
     ; écrit EASY
     ld hl, $9888
-    ld a, $08 ; E
+    ld a, TILE_E ; E
     ld [hli], a ; écris E, hl++
-    ld a, $01 ; A
+    ld a, TILE_A ; A
     ld [hli], a ; écris A, hl++
-    ld a, $0E ; S
+    ld a, TILE_S ; S
     ld [hli], a ; écris S, hl++
-    ld a, $10 ; Y
+    ld a, TILE_Y ; Y
     ld [hli], a ; écris Y, hl++
 
     ;MEDIUM
     ld hl, $9907
-    ld a, $0D ; M
+    ld a, TILE_M ; M
     ld [hli], a ; écris M, hl++
-    ld a, $08 ; E
+    ld a, TILE_E ; E
     ld [hli], a ; écris E, hl++
-    ld a, $07 ; D
+    ld a, TILE_D ; D
     ld [hli], a ; écris D, hl++
-    ld a, $06 ; I
+    ld a, TILE_I ; I
     ld [hli], a ; écris I, hl++
-    ld a, $0F ; U
+    ld a, TILE_U ; U
     ld [hli], a ; écris E, hl++
-    ld a, $0D ; M
+    ld a, TILE_M ; M
     ld [hli], a ; écris M, hl++
 
     ;HARD
     ld hl, $9988
-    ld a, $0C ; H
+    ld a, TILE_H ; H
     ld [hli], a ; écris H, hl++
-    ld a, $01 ; A
+    ld a, TILE_A ; A
     ld [hli], a ; écris A, hl++
-    ld a, $02 ; R
+    ld a, TILE_R ; R
     ld [hli], a ; écris R, hl++
-    ld a, $07 ; D
+    ld a, TILE_D ; D
     ld [hli], a ; écris D, hl++
     ret
 
@@ -400,3 +427,4 @@ wCurrentButton: db ; 0=A 1=B 2=UP 3=DOWN 4=LEFT 5=RIGHT
 wRoundCount: db ; 0 à 24
 wWinDrawn: db
 wFailDrawn: db
+wFrameTimer: db
