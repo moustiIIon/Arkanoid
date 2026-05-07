@@ -51,8 +51,12 @@ TitleScreenLoop:
     call MemCpy
 
     ; ici = counter briques
-    ld a, 6
+    ld a, 28
 	ld [wBrickCnt], a
+
+    ld a, 0
+    ld [wScore], a
+    call UpdateScoreDisplay
 
     ld de, Paddle
     ld hl, $8000
@@ -159,6 +163,7 @@ ResetBall:
     jp Main
 
 ThisIsGameOver:
+    call SaveScoreToSram
     call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
@@ -252,6 +257,7 @@ PaddleBounceDone:
 	jp nz, CheckLeft
 
 WaitVblankWin:
+    call SaveScoreToSram
 	ld a, [rLY]
 	cp a, 144
 	jr c, WaitVblankWin
@@ -295,6 +301,7 @@ wBallMomentumY: db
 
 SECTION "Brick Data", WRAM0
 wBrickCnt: db
+wScore: db
 
 SECTION "Game Over Data", WRAM0
 wCntBallUnderPaddle: db
