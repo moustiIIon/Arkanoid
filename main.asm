@@ -1,5 +1,16 @@
 INCLUDE "hardware.inc"
 
+SECTION "VBlank Handler", ROM0[$0040]
+    reti
+
+SECTION "STAT Handler", ROM0[$0048]
+    push af
+    ld a, [rLCDC]
+    and ~LCDC_WIN_ON
+    ld [rLCDC], a
+    pop af
+    reti
+
 SECTION "Header", ROM0[$100]
 
     jp EntryPoint

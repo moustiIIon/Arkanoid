@@ -50,6 +50,17 @@ TitleScreenLoop:
     ld bc, Tilemap.End - Tilemap
     call MemCpy
 
+    ld hl, $9C00
+    ld bc, 1024
+    ld a, $08
+.clearWindow:
+    ld [hli], a
+    dec bc
+    ld a, b
+    or c
+    ld a, $08
+    jp nz, .clearWindow
+
     ; ici = counter briques
     ld a, 28
 	ld [wBrickCnt], a
@@ -103,8 +114,23 @@ ClearOam:
     ld [wBallMomentumY], a
 
     ; the screen is now on so the objects will be visible as they are updated, but that's fine
-    ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
+    ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON | LCDC_WIN_ON | LCDC_WIN_9C00
     ld [rLCDC], a
+
+    ld a, 0
+    ldh [rWY], a
+    ld a, 7
+    ldh [rWX], a
+
+    ; STAT interrupt at LY=8 to disable Window after the HUD row
+    ld a, 8
+    ldh [rLYC], a
+    ld a, STAT_LYC
+    ldh [rSTAT], a
+    ld a, IE_STAT
+    ldh [rIE], a
+    ei
+
     ld a, %11100100
     ld [rBGP], a
     ld a, %11100100
@@ -123,6 +149,11 @@ WaitVBlank2:
     ld a, [rLY]
     cp 144
     jp c, WaitVBlank2
+
+    ; Re-enable Window for HUD (STAT interrupt will disable it again after LY=8)
+    ld a, [rLCDC]
+    or LCDC_WIN_ON
+    ld [rLCDC], a
 
     ; pos for the ball, in oam
     ld a, [wBallMomentumX]
@@ -163,9 +194,12 @@ ResetBall:
     jp Main
 
 ThisIsGameOver:
+    di
     call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
+    ld a, 0
+    ldh [rIE], a
     jp BrickInit
 
 
@@ -259,8 +293,11 @@ WaitVblankWin:
 	ld a, [rLY]
 	cp a, 144
 	jr c, WaitVblankWin
+	di
 	ld a, 0
 	ld [rLCDC], a
+	ld a, 0
+	ldh [rIE], a
 	jp GlobalMenuInit
 
 CheckLeft:
