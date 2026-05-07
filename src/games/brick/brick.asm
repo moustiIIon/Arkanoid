@@ -151,6 +151,8 @@ WaitVBlank2:
     jp c, WaitVBlank2
 
     ; Re-enable Window for HUD (STAT interrupt will disable it again after LY=8)
+    ld a, %11100101
+    ldh [rBGP], a
     ld a, [rLCDC]
     or LCDC_WIN_ON
     ld [rLCDC], a

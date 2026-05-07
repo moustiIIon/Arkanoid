@@ -5,6 +5,8 @@ SECTION "VBlank Handler", ROM0[$0040]
 
 SECTION "STAT Handler", ROM0[$0048]
     push af
+    ld a, %11100100
+    ldh [rBGP], a
     ld a, [rLCDC]
     and ~LCDC_WIN_ON
     ld [rLCDC], a
