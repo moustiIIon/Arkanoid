@@ -20,6 +20,7 @@ DisableSRAM:
 
 InitAllSram:
     call EnableSRAM
+
     ld a, SRAM_MAGIC_VAL
     jr z, .WasAlreadyInit
 
@@ -35,6 +36,50 @@ InitAllSram:
 .WasAlreadyInit:
     call DisableSRAM
     ret
+    
+
+SaveScoreToSram:
+    call EnableSRAM
+
+    ld a, [wScore]
+    ld b, a
+    
+    ld a, [SRAM_SCORE1]
+    cp a, b
+    jr nc, .CheckNextScore2
+
+    ld c, a
+    ld a, b
+    ld [SRAM_SCORE1], a
+
+    ld a, [SRAM_SCORE2]
+    ld b, a
+    ld a, c
+    ld [SRAM_SCORE2], a
+
+    ld a, b
+    ld [SRAM_SCORE3], a
+    jr .EverythingDone
+
+.CheckNextScore2:
+    ld a, [SRAM_SCORE2]
+    cp a, b
+    jr nc, .CheckNextScore3
+
+    ld c, a
+    ld a, b
+    ld [SRAM_SCORE2], a
+    ld a, c
+    ld [SRAM_SCORE3], a
+    jr .EverythingDone
+
+.CheckNextScore3:
+    ld a, [SRAM_SCORE3]
+    cp a, b
+    jr nc, .EverythingDone
+
+    ld a, b
+    ld [SRAM_SCORE3], a
 
 .EverythingDone:
     call DisableSRAM
