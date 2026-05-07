@@ -38,6 +38,7 @@ ReactionInit:
     ld [wNewKeys], a
     ld [wDifficultyDrawn], a
     ld [wSelectedDifficulty], a
+    ld [wGameInitDone], a
     ld [wWinDrawn], a
     ld [wFailDrawn], a
 
@@ -153,6 +154,12 @@ GameScreenInit:
     ; éteindre LCD pour écrire VRAM + OAM librement
     xor a
     ld [rLCDC], a
+    ;load shared tileset
+    ld de, Shared_Tileset_Begin
+    ld hl, $9000
+    ld bc, Shared_Tileset_End - Shared_Tileset_Begin
+    call MemCpy
+
     ; vider le tilemap
     ld hl, TILEMAP0
     ld bc, 1024
@@ -224,6 +231,7 @@ GameScreen:
     ; sync sprite OAM en VBlank
     ld a, [wCurrentButton]
     ld [$FE02], a
+    call DrawRoundCounter
     ;frame timer
     ld a, [wFrameTimer]
     inc a
@@ -418,6 +426,31 @@ DrawDifficultyText:
     ld a, TILE_D ; D
     ld [hli], a ; écris D, hl++
     ret
+
+DrawRoundCounter:
+    ld a, [wRoundCount]
+    inc a ; round joué = complétés + 1
+
+    ld b, 0 ; b = dizaine
+.divTens:
+    cp 10
+    jr c, .divDone
+    sub 10
+    inc b
+    jr .divTens
+.divDone:
+    ld c, a ; c = unité
+
+    ld hl, $9809 ; row 0, col 9
+    ld a, b
+    add a, TILE_0
+    ld [hli], a
+
+    ld a, c
+    add a, TILE_0
+    ld [hl], a
+    ret
+
 
 SECTION "Reaction State", WRAM0
 wReactionState: db ;db sans valeur = réserve 1 octet, le linker donnera une adresse WRAM auto

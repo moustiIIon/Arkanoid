@@ -19,6 +19,18 @@ DEF TILE_W EQU $11
 DEF TILE_F EQU $12
 DEF TILE_L EQU $13
 
+DEF TILE_0 EQU $14
+DEF TILE_1 EQU $15
+DEF TILE_2 EQU $16
+DEF TILE_3 EQU $17
+DEF TILE_4 EQU $18
+DEF TILE_5 EQU $19
+DEF TILE_6 EQU $1A
+DEF TILE_7 EQU $1B
+DEF TILE_8 EQU $1C
+DEF TILE_9 EQU $1D
+
+
 
 SECTION "Shared Tiles", ROM0
 
@@ -251,5 +263,106 @@ Shared_Tileset_Begin:
     dw `33000000
     dw `33333330
     dw `00000000
+
+; Tile $14 : Chiffre 0
+    dw `03333300
+    dw `33000330
+    dw `33000330
+    dw `33000330
+    dw `33000330
+    dw `33000330
+    dw `03333300
+    dw `00000000
+
+; Tile $15 : Chiffre 1
+    dw `00033000
+    dw `00333000
+    dw `00033000
+    dw `00033000
+    dw `00033000
+    dw `00033000
+    dw `03333330
+    dw `00000000
+
+; Tile $16 : Chiffre 2
+    dw `03333300
+    dw `33000330
+    dw `00000330
+    dw `00003300
+    dw `00033000
+    dw `00330000
+    dw `33333330
+    dw `00000000
+
+; Tile $17 : Chiffre 3
+    dw `03333300
+    dw `33000330
+    dw `00000330
+    dw `00333300
+    dw `00000330
+    dw `33000330
+    dw `03333300
+    dw `00000000
+
+; Tile $18 : Chiffre 4
+    dw `00033330
+    dw `00330330
+    dw `03300330
+    dw `33333333
+    dw `00000330
+    dw `00000330
+    dw `00000330
+    dw `00000000
+
+; Tile $19 : Chiffre 5
+    dw `33333330
+    dw `33000000
+    dw `33000000
+    dw `33333300
+    dw `00000330
+    dw `33000330
+    dw `03333300
+    dw `00000000
+
+; Tile $1A : Chiffre 6
+    dw `03333300
+    dw `33000000
+    dw `33000000
+    dw `33333300
+    dw `33000330
+    dw `33000330
+    dw `03333300
+    dw `00000000
+
+; Tile $1B : Chiffre 7
+    dw `33333330
+    dw `00000330
+    dw `00003300
+    dw `00033000
+    dw `00330000
+    dw `00330000
+    dw `00330000
+    dw `00000000
+
+; Tile $1C : Chiffre 8
+    dw `03333300
+    dw `33000330
+    dw `33000330
+    dw `03333300
+    dw `33000330
+    dw `33000330
+    dw `03333300
+    dw `00000000
+
+; Tile $1D : Chiffre 9
+    dw `03333300
+    dw `33000330
+    dw `33000330
+    dw `03333330
+    dw `00000330
+    dw `33000330
+    dw `03333300
+    dw `00000000
+
 
 Shared_Tileset_End:
