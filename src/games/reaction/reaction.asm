@@ -339,11 +339,13 @@ GameScreen:
     ld [wCurrentButton], a
     jp ReactionLoop
 .win:
+    call SaveReactScoreToSram
     ld a, REACT_STATE_WIN
     ld [wReactionState], a
     jp ReactionLoop
 
 .wrong:
+    call SaveReactScoreToSram
     ld a, REACT_STATE_FAIL
     ld [wReactionState], a
     jp ReactionLoop
