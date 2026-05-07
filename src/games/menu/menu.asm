@@ -167,7 +167,7 @@ LeaderboardScreen:
 
     call EnableSRAM
 
-    ; scores brick (BCD) — rows 4/5/6, col 5
+    ; scores brick (BCD)- rows 4/5/6, col 5
     ld hl, $9885
     ld a, [SRAM_SCORE1]
     call DrawBCDScore
@@ -180,7 +180,7 @@ LeaderboardScreen:
     ld a, [SRAM_SCORE3]
     call DrawBCDScore
 
-    ; scores react (binaire) — rows 11/12/13, col 5
+    ; scores react (binaire) - rows 11/12/13, col 5
     ld hl, $9965
     ld a, [SRAM_REACT_SCORE1]
     call DrawBinaryScore

@@ -9,7 +9,7 @@ pc = program counter (où on est ds la ROM)
 ## carte mémoire
 ```
 $0000 - $3FFF   ROM bank 0         (ta cartouche, début)
-$4000 - $7FFF   ROM bank N         (cartouche, banque switchable — MBC5)
+$4000 - $7FFF   ROM bank N         (cartouche, banque switchable - MBC5)
 $8000 - $9FFF   VRAM               (tiles + tilemap)
 $A000 - $BFFF   SRAM               (mémoire sauvegardée sur cartouche, leaderboard !)
 $C000 - $DFFF   WRAM               (RAM de travail = tes variables)
