@@ -1,6 +1,7 @@
 SECTION "Menu", ROM0
 
 GlobalMenuInit:
+    call InitAllSram
     ld de, Menu_Tileset_Begin
     ld hl, $9000
     ld bc, Menu_Tileset_End - Menu_Tileset_Begin

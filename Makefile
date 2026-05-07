@@ -7,7 +7,7 @@ LINK    = rgblink
 FIX     = rgbfix
 ASMFLAGS  = -I .
 LINKFLAGS =
-FIXFLAGS  = -v -p 0xFF
+FIXFLAGS  = -v -p 0xFF -m MBC5+RAM+BATTERY -r 3
 
 all: $(ROM)
 
