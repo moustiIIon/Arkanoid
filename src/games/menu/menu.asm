@@ -98,11 +98,10 @@ LaunchArkanoid:
     jp BrickInit
 
 LaunchReact:
-    ; ici transition
     call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
-    jp ReactionInit
+    jp ReactTitleScreen
 
 ; efface le curseur et dessine sur le bon jeu seclectionné
 

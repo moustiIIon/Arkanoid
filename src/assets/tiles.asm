@@ -29,6 +29,8 @@ DEF TILE_6 EQU $1A
 DEF TILE_7 EQU $1B
 DEF TILE_8 EQU $1C
 DEF TILE_9 EQU $1D
+DEF TILE_BORDER EQU $1E
+DEF TILE_BORDER_HL EQU $1F
 
 
 
@@ -364,5 +366,25 @@ Shared_Tileset_Begin:
     dw `03333300
     dw `00000000
 
+
+; Tile $1E : Border dim — petit point central
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00033000
+    dw `00033000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+
+; Tile $1F : Border highlight — carré plein
+    dw `00000000
+    dw `03333330
+    dw `03333330
+    dw `03333330
+    dw `03333330
+    dw `03333330
+    dw `03333330
+    dw `00000000
 
 Shared_Tileset_End:
