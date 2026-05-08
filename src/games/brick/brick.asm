@@ -163,6 +163,7 @@ ResetBall:
     jp Main
 
 ThisIsGameOver:
+    call SaveScoreToSram
     call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
@@ -256,6 +257,7 @@ PaddleBounceDone:
 	jp nz, CheckLeft
 
 WaitVblankWin:
+    call SaveScoreToSram
 	ld a, [rLY]
 	cp a, 144
 	jr c, WaitVblankWin

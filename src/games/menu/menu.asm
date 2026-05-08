@@ -1,9 +1,10 @@
 SECTION "Menu", ROM0
 
 GlobalMenuInit:
-    ld de, Menu_Tileset_Begin
+    call InitAllSram
+    ld de, Shared_Tileset_Begin
     ld hl, $9000
-    ld bc, Menu_Tileset_End - Menu_Tileset_Begin
+    ld bc, Shared_Tileset_End - Shared_Tileset_Begin
     call MemCpy
 
     ld de, Menu_Map_Begin
@@ -52,6 +53,11 @@ GlobalMenuLoop:
     and PAD_START
     jr nz, MenuGameSelect
 
+    ; Vérifier SELECT → leaderboard
+    ld a, [wNewKeys]
+    and PAD_SELECT
+    jp nz, LeaderboardScreen
+
     jp GlobalMenuLoop
 
 MenuMoveUp:
@@ -92,11 +98,10 @@ LaunchArkanoid:
     jp BrickInit
 
 LaunchReact:
-    ; ici transition
     call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
-    jp ReactionInit
+    jp ReactTitleScreen
 
 ; efface le curseur et dessine sur le bon jeu seclectionné
 
@@ -119,6 +124,121 @@ UpdateCursor:
 .cursorArkanoid:
     ld hl, $9884
     ld a, $0B
+    ld [hl], a
+    ret
+
+LeaderboardScreen:
+    xor a
+    ld [rLCDC], a
+
+    ; vider tilemap
+    ld hl, $9800
+    ld bc, 1024
+.clearMap:
+    xor a
+    ld [hli], a
+    dec bc
+    ld a, b
+    or a, c
+    jp nz, .clearMap
+
+    ; "ARK" row 2 col 5 = $9845
+    ld hl, $9845
+    ld a, TILE_A
+    ld [hli], a
+    ld a, TILE_R
+    ld [hli], a
+    ld a, TILE_K
+    ld [hl], a
+
+    ; "REACT" row 9 col 4 = $9924
+    ld hl, $9924
+    ld a, TILE_R
+    ld [hli], a
+    ld a, TILE_E
+    ld [hli], a
+    ld a, TILE_A
+    ld [hli], a
+    ld a, TILE_C
+    ld [hli], a
+    ld a, TILE_T
+    ld [hl], a
+
+    call EnableSRAM
+
+    ; scores brick (BCD)- rows 4/5/6, col 5
+    ld hl, $9885
+    ld a, [SRAM_SCORE1]
+    call DrawBCDScore
+
+    ld hl, $98A5
+    ld a, [SRAM_SCORE2]
+    call DrawBCDScore
+
+    ld hl, $98C5
+    ld a, [SRAM_SCORE3]
+    call DrawBCDScore
+
+    ; scores react (binaire) - rows 11/12/13, col 5
+    ld hl, $9965
+    ld a, [SRAM_REACT_SCORE1]
+    call DrawBinaryScore
+
+    ld hl, $9985
+    ld a, [SRAM_REACT_SCORE2]
+    call DrawBinaryScore
+
+    ld hl, $99A5
+    ld a, [SRAM_REACT_SCORE3]
+    call DrawBinaryScore
+
+    call DisableSRAM
+
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+    ld a, %11100100
+    ld [rBGP], a
+
+.leaderboardLoop:
+    call MyWaitVBlank
+    call UpdateKeys
+    ld a, [wNewKeys]
+    and PAD_START
+    jr z, .leaderboardLoop
+    jp GlobalMenuInit
+
+DrawBCDScore:
+    ; a = score BCD, hl = destination tilemap (écrit 2 tiles)
+    ld b, a
+    and %11110000
+    rrca
+    rrca
+    rrca
+    rrca
+    add a, TILE_0
+    ld [hli], a
+    ld a, b
+    and %00001111
+    add a, TILE_0
+    ld [hl], a
+    ret
+
+DrawBinaryScore:
+    ; a = score binaire (0-25), hl = destination tilemap (écrit 2 tiles)
+    ld b, 0
+.divLoop:
+    cp 10
+    jr c, .divDone
+    sub 10
+    inc b
+    jr .divLoop
+.divDone:
+    ld c, a
+    ld a, b
+    add a, TILE_0
+    ld [hli], a
+    ld a, c
+    add a, TILE_0
     ld [hl], a
     ret
 
