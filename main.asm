@@ -36,6 +36,7 @@ INCLUDE "src/core/input.asm"
 INCLUDE "src/core/tile_lookup.asm"
 INCLUDE "src/core/my_waitvblank.asm"
 INCLUDE "src/core/sram.asm"
+INCLUDE "src/core/init.asm"
 
 INCLUDE "src/games/brick/brick.asm"
 INCLUDE "src/games/brick/brick_logic.asm"

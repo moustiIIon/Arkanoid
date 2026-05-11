@@ -1,0 +1,12 @@
+INCLUDE "hardware.inc"
+SECTION "Touhou Game", ROM0
+
+DEF TOUHOU_STATE_MENU EQU 0
+DEF TOUHOU_STATE_GAME EQU 1
+DEF TOUHOU_STATE_WIN EQU 2
+DEF TOUHOU_STATE_FAIL EQU 3
+
+Touhou_Init:
+    ld hl, TILEMAP0
+    ld bc, 1024
+    xor a

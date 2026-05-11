@@ -1,37 +1,12 @@
 SECTION "Reaction Logic", ROM0
 
 GameScreenInit:
-    xor a
-    ld [rLCDC], a
-
-    ld de, Shared_Tileset_Begin
-    ld hl, $9000
-    ld bc, Shared_Tileset_End - Shared_Tileset_Begin
-    call MemCpy
-
-    ld hl, TILEMAP0
-    ld bc, 1024
-.clearMap:
-    xor a
-    ld [hli], a
-    dec bc
-    ld a, b
-    or a, c
-    jp nz, .clearMap
+    call CommonInit
 
     ld de, Reaction_Sprite_Tiles_Begin
     ld hl, $8000
     ld bc, Reaction_Sprite_Tiles_End - Reaction_Sprite_Tiles_Begin
     call MemCpy
-
-    ; vider OAM
-    ld hl, $FE00
-    ld b, 160
-    xor a
-.clearOam:
-    ld [hli], a
-    dec b
-    jr nz, .clearOam
 
     ; sprite 0 au centre
     ld hl, $FE00
