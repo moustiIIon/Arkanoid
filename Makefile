@@ -19,7 +19,7 @@ $(ROM): $(OBJ)
 	$(FIX) $(FIXFLAGS) $(ROM)
 
 clean:
-	rm -f $(OBJ) $(ROM)
+	rm -f $(OBJ) $(ROM) *.sav
 
 re: clean all
 
