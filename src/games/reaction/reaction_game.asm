@@ -1,5 +1,23 @@
 SECTION "Reaction Logic", ROM0
 
+DEF REACT_SPRITE_Y    EQU 84
+DEF REACT_SPRITE_X    EQU 84
+DEF REACT_HUD_WY      EQU 136
+DEF REACT_HUD_WX      EQU 7
+DEF REACT_TIME_EASY   EQU 120
+DEF REACT_TIME_MEDIUM EQU 60
+DEF REACT_TIME_HARD   EQU 30
+DEF REACT_ROUNDS_WIN  EQU 25
+DEF BTN_A             EQU 0
+DEF BTN_B             EQU 1
+DEF BTN_UP            EQU 2
+DEF BTN_DOWN          EQU 3
+DEF BTN_LEFT          EQU 4
+DEF BTN_RIGHT         EQU 5
+DEF REACT_HUD_ADDR    EQU $9C09
+DEF REACT_WIN_ADDR    EQU $9909
+DEF REACT_FAIL_ADDR   EQU $9908
+
 GameScreenInit:
     call CommonInit
 
@@ -10,9 +28,9 @@ GameScreenInit:
 
     ; sprite 0 au centre
     ld hl, $FE00
-    ld a, 84
+    ld a, REACT_SPRITE_Y
     ld [hli], a
-    ld a, 84
+    ld a, REACT_SPRITE_X
     ld [hli], a
     ld a, 0
     ld [hli], a
@@ -28,9 +46,9 @@ GameScreenInit:
     dec b
     jr nz, .clearWinMap
 
-    ld a, 136
+    ld a, REACT_HUD_WY
     ld [rWY], a
-    ld a, 7
+    ld a, REACT_HUD_WX
     ld [rWX], a
 
     ; bouton aléatoire via rDIV
@@ -76,15 +94,15 @@ GameScreen:
     ld a, [wSelectedDifficulty]
     cp 0
     jr nz, .notEasy
-    ld a, 120
+    ld a, REACT_TIME_EASY
     jr .checkTimeout
 .notEasy:
     cp 1
     jr nz, .notMedium
-    ld a, 60
+    ld a, REACT_TIME_MEDIUM
     jr .checkTimeout
 .notMedium:
-    ld a, 30
+    ld a, REACT_TIME_HARD
 .checkTimeout:
     cp b
     jp c, .wrong
@@ -94,7 +112,7 @@ GameScreen:
     and a, PAD_A
     jr z, .notA
     ld a, [wCurrentButton]
-    cp 0
+    cp BTN_A
     jp z, .correct
     jp .wrong
 .notA:
@@ -103,7 +121,7 @@ GameScreen:
     and a, PAD_B
     jr z, .notB
     ld a, [wCurrentButton]
-    cp 1
+    cp BTN_B
     jp z, .correct
     jp .wrong
 .notB:
@@ -112,7 +130,7 @@ GameScreen:
     and a, PAD_UP
     jr z, .notUp
     ld a, [wCurrentButton]
-    cp 2
+    cp BTN_UP
     jp z, .correct
     jp .wrong
 .notUp:
@@ -121,7 +139,7 @@ GameScreen:
     and a, PAD_DOWN
     jr z, .notDown
     ld a, [wCurrentButton]
-    cp 3
+    cp BTN_DOWN
     jp z, .correct
     jp .wrong
 .notDown:
@@ -130,7 +148,7 @@ GameScreen:
     and a, PAD_LEFT
     jr z, .notLeft
     ld a, [wCurrentButton]
-    cp 4
+    cp BTN_LEFT
     jp z, .correct
     jp .wrong
 .notLeft:
@@ -139,7 +157,7 @@ GameScreen:
     and a, PAD_RIGHT
     jp z, ReactionLoop
     ld a, [wCurrentButton]
-    cp 5
+    cp BTN_RIGHT
     jp z, .correct
     jp .wrong
 
@@ -149,7 +167,7 @@ GameScreen:
     ld a, [wRoundCount]
     inc a
     ld [wRoundCount], a
-    cp 25
+    cp REACT_ROUNDS_WIN
     jp z, .win
 .pickNext:
     ld a, [rDIV]
@@ -180,7 +198,7 @@ WinScreen:
     ld a, [wWinDrawn]
     cp 0
     jr nz, .skipWin
-    ld hl, $9909
+    ld hl, REACT_WIN_ADDR
     ld a, TILE_W
     ld [hli], a
     ld a, TILE_I
@@ -209,7 +227,7 @@ FailScreen:
     ld a, [wFailDrawn]
     cp 0
     jr nz, .skipFail
-    ld hl, $9908
+    ld hl, REACT_FAIL_ADDR
     ld a, TILE_F
     ld [hli], a
     ld a, TILE_A
@@ -245,7 +263,7 @@ DrawRoundCounter:
 .divDone:
     ld c, a ; c = unité
 
-    ld hl, $9C09 ; window tilemap col 9
+    ld hl, REACT_HUD_ADDR ; window tilemap col 9
     ld a, b
     add a, TILE_0
     ld [hli], a

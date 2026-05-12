@@ -1,5 +1,16 @@
 SECTION "Brick Game", ROM0
 
+DEF BRICK_COUNT        EQU 28
+DEF PADDLE_INIT_Y      EQU 144
+DEF PADDLE_INIT_X      EQU 24
+DEF BALL_INIT_Y        EQU 116
+DEF BALL_INIT_X        EQU 40
+DEF BALL_DEAD_Y        EQU 176
+DEF BALL_LIVES         EQU 2
+DEF BALL_RESET_X       EQU 60
+DEF PADDLE_LEFT_LIMIT  EQU 15
+DEF PADDLE_RIGHT_LIMIT EQU 105
+
 BrickInit:
 
 TitleScreen:
@@ -51,7 +62,7 @@ TitleScreenLoop:
     call MemCpy
 
     ; ici = counter briques
-    ld a, 28
+    ld a, BRICK_COUNT
 	ld [wBrickCnt], a
 
     ld a, 0
@@ -79,18 +90,18 @@ ClearOam:
     ld hl, STARTOF(OAM)
 
     ; load the paddle
-    ld a, 128 + 16
+    ld a, PADDLE_INIT_Y
     ld [hli], a
-    ld a, 16 + 8
+    ld a, PADDLE_INIT_X
     ld [hli], a
     ld a, 0
     ld [hli], a
     ld [hli], a
 
     ; load the ball
-    ld a, 100 + 16
+    ld a, BALL_INIT_Y
     ld [hli], a
-    ld a, 32 + 8
+    ld a, BALL_INIT_X
     ld [hli], a
     ld a, 1
     ld [hli], a
@@ -142,19 +153,19 @@ WaitVBlank2:
 ; ici on va check si la balle est dessous du paddle donc la mort =
 ; game over on a perdu et ensuite on aura juste a faire le score pour le leaderboard etc
     ld a, [STARTOF(OAM) + 4]
-    cp a, 176
+    cp a, BALL_DEAD_Y
     jp c, Bounce_on_top
 
     ld a, [wCntBallUnderPaddle]
     inc a
     ld [wCntBallUnderPaddle], a
-    cp a, 2
+    cp a, BALL_LIVES
     jp z, ThisIsGameOver
 
 ResetBall:
-    ld a, 116
+    ld a, BALL_INIT_Y
     ld [STARTOF(OAM) + 4], a
-    ld a, 60
+    ld a, BALL_RESET_X
     ld [STARTOF(OAM) + 5], a
     ld a, 1
     ld [wBallMomentumX], a
@@ -273,7 +284,7 @@ Left:
     ld a, [STARTOF(OAM) + 1]
     ; vitesse par frame
     dec a
-    cp a, 15
+    cp a, PADDLE_LEFT_LIMIT
     jp z, Main
     ld [STARTOF(OAM) + 1], a
     jp Main
@@ -286,7 +297,7 @@ Right:
     ld a, [STARTOF(OAM) + 1]
     ; vitesse par frame
     inc a
-    cp a, 105
+    cp a, PADDLE_RIGHT_LIMIT
     jp z, Main
     ld [STARTOF(OAM) + 1], a
     jp Main
