@@ -7,7 +7,7 @@ DEF BALL_INIT_Y        EQU 116
 DEF BALL_INIT_X        EQU 40
 DEF BALL_DEAD_Y        EQU 176
 DEF BALL_LIVES         EQU 2
-DEF BALL_RESET_X       EQU 60
+DEF BALL_RESET_X       EQU 100
 DEF PADDLE_LEFT_LIMIT  EQU 15
 DEF PADDLE_RIGHT_LIMIT EQU 105
 
@@ -67,6 +67,7 @@ TitleScreenLoop:
 
     ld a, 0
     ld [wScore], a
+    ld [wBallSpeedValue], a
     call UpdateScoreDisplay
 
     ld de, Paddle
@@ -135,7 +136,60 @@ WaitVBlank2:
     cp 144
     jp c, WaitVBlank2
 
-    ; pos for the ball, in oam
+    ld a, [wFrameCounter]
+    inc a
+    ld [wFrameCounter], a
+
+    call UpdateKeys
+    ; pour check frame par frame
+    call BallPhysicsStep
+
+    ld a, [wBallSpeedValue]
+    and a
+    jr z, NoBonusStep
+    cp 3
+    jr z, DoBonusStep
+    cp 2
+    jr z, CheckEveryTwoFrames
+    ld a, [wFrameCounter]
+    and %00000011
+    jr nz, NoBonusStep
+    jr DoBonusStep
+CheckEveryTwoFrames:
+    ld a, [wFrameCounter]
+    and %00000001
+    jr nz, NoBonusStep
+DoBonusStep:
+    call BallPhysicsStep
+NoBonusStep:
+
+CheckLeft:
+    ld a, [wCurKeys]
+    and PAD_LEFT
+    jp z, CheckRight
+Left:
+    ld a, [STARTOF(OAM) + 1]
+    dec a
+    cp a, 15
+    jp z, Main
+    ld [STARTOF(OAM) + 1], a
+    jp Main
+CheckRight:
+    ld a, [wCurKeys]
+    and PAD_RIGHT
+    jp z, Main
+Right:
+    ld a, [STARTOF(OAM) + 1]
+    inc a
+    cp a, 105
+    jp z, Main
+    ld [STARTOF(OAM) + 1], a
+    jp Main
+
+
+; Deplace la balle de 1px et effectue toutes les verifications de collision
+; donc le deplacement comme avant simplement si appellé plusieurs foix alors va bouger plus vite par definition
+BallPhysicsStep:
     ld a, [wBallMomentumX]
     ld b, a
     ld a, [STARTOF(OAM) + 5]
@@ -147,14 +201,11 @@ WaitVBlank2:
     add a, b
     ld [STARTOF(OAM) + 4], a
 
-    call UpdateKeys
-
-
 ; ici on va check si la balle est dessous du paddle donc la mort =
 ; game over on a perdu et ensuite on aura juste a faire le score pour le leaderboard etc
     ld a, [STARTOF(OAM) + 4]
     cp a, BALL_DEAD_Y
-    jp c, Bounce_on_top
+    jp c, BounceOnTop
 
     ld a, [wCntBallUnderPaddle]
     inc a
@@ -171,18 +222,16 @@ ResetBall:
     ld [wBallMomentumX], a
     ld a, -1
     ld [wBallMomentumY], a
-    jp Main
+    ret
 
 ThisIsGameOver:
     call SaveScoreToSram
     call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
-    jp BrickInit
+    jp GlobalMenuInit
 
-
-
-Bounce_on_top:
+BounceOnTop:
     ld a, [STARTOF(OAM) + 4]
     sub a, 16 + 1
     ld c, a
@@ -196,6 +245,7 @@ Bounce_on_top:
     call CheckAndHandleBrick
     ld a, 1
     ld [wBallMomentumY], a
+
 BounceOnRight:
     ld a, [STARTOF(OAM) + 4]
     sub a, 16
@@ -226,22 +276,6 @@ BounceOnLeft:
     ld a, 1
     ld [wBallMomentumX], a
 
-; BounceOnBottom:
-;     ld a, [STARTOF(OAM) + 4]
-;     sub a, 16 - 1
-;     ld c, a
-;     ld a, [STARTOF(OAM) + 5]
-;     sub a, 8
-;     ld b, a
-;     call GetTileByPixel
-;     ld a, [hl]
-;     call IsWallTile
-;     jp nz, BounceDone
-;     call CheckAndHandleBrick
-;     ld a, -1
-;     ld [wBallMomentumY], a
-
-
 BounceDone:
     ld a, [STARTOF(OAM)]
     ld b, a
@@ -261,46 +295,19 @@ BounceDone:
     ld a, -1
     ld [wBallMomentumY], a
 
-
 PaddleBounceDone:
-	ld a, [wBrickCnt]
-	cp a, 0
-	jp nz, CheckLeft
+    ld a, [wBrickCnt]
+    cp a, 0
+    ret nz
 
-WaitVblankWin:
     call SaveScoreToSram
-	ld a, [rLY]
-	cp a, 144
-	jr c, WaitVblankWin
-	ld a, 0
-	ld [rLCDC], a
-	jp GlobalMenuInit
-
-CheckLeft:
-    ld a, [wCurKeys]
-    and a, PAD_LEFT
-    jp z, CheckRight
-Left:
-    ld a, [STARTOF(OAM) + 1]
-    ; vitesse par frame
-    dec a
-    cp a, PADDLE_LEFT_LIMIT
-    jp z, Main
-    ld [STARTOF(OAM) + 1], a
-    jp Main
-
-CheckRight:
-    ld a, [wCurKeys]
-    and a, PAD_RIGHT
-    jp z, Main
-Right:
-    ld a, [STARTOF(OAM) + 1]
-    ; vitesse par frame
-    inc a
-    cp a, PADDLE_RIGHT_LIMIT
-    jp z, Main
-    ld [STARTOF(OAM) + 1], a
-    jp Main
+WaitVblankWin:
+    ld a, [rLY]
+    cp a, 144
+    jr c, WaitVblankWin
+    ld a, 0
+    ld [rLCDC], a
+    jp GlobalMenuInit
 
 
 SECTION "Counter", WRAM0
@@ -309,6 +316,9 @@ wFrameCounter: db
 SECTION "Ball Data", WRAM0
 wBallMomentumX: db
 wBallMomentumY: db
+
+SECTION "Ball speed data", WRAM0
+wBallSpeedValue: db
 
 SECTION "Brick Data", WRAM0
 wBrickCnt: db
