@@ -56,6 +56,7 @@ TitleScreenLoop:
 
     ld a, 0
     ld [wScore], a
+    ld [wBallSpeedValue], a
     call UpdateScoreDisplay
 
     ld de, Paddle
@@ -124,7 +125,60 @@ WaitVBlank2:
     cp 144
     jp c, WaitVBlank2
 
-    ; pos for the ball, in oam
+    ld a, [wFrameCounter]
+    inc a
+    ld [wFrameCounter], a
+
+    call UpdateKeys
+    ; pour check frame par frame
+    call BallPhysicsStep
+
+    ld a, [wBallSpeedValue]
+    and a
+    jr z, NoBonusStep
+    cp 3
+    jr z, DoBonusStep
+    cp 2
+    jr z, CheckEveryTwoFrames
+    ld a, [wFrameCounter]
+    and %00000011
+    jr nz, NoBonusStep
+    jr DoBonusStep
+CheckEveryTwoFrames:
+    ld a, [wFrameCounter]
+    and %00000001
+    jr nz, NoBonusStep
+DoBonusStep:
+    call BallPhysicsStep
+NoBonusStep:
+
+CheckLeft:
+    ld a, [wCurKeys]
+    and PAD_LEFT
+    jp z, CheckRight
+Left:
+    ld a, [STARTOF(OAM) + 1]
+    dec a
+    cp a, 15
+    jp z, Main
+    ld [STARTOF(OAM) + 1], a
+    jp Main
+CheckRight:
+    ld a, [wCurKeys]
+    and PAD_RIGHT
+    jp z, Main
+Right:
+    ld a, [STARTOF(OAM) + 1]
+    inc a
+    cp a, 105
+    jp z, Main
+    ld [STARTOF(OAM) + 1], a
+    jp Main
+
+
+; Deplace la balle de 1px et effectue toutes les verifications de collision.
+; Peut faire jp GlobalMenuInit directement si game over ou victoire.
+BallPhysicsStep:
     ld a, [wBallMomentumX]
     ld b, a
     ld a, [STARTOF(OAM) + 5]
@@ -136,14 +190,11 @@ WaitVBlank2:
     add a, b
     ld [STARTOF(OAM) + 4], a
 
-    call UpdateKeys
-
-
 ; ici on va check si la balle est dessous du paddle donc la mort =
 ; game over on a perdu et ensuite on aura juste a faire le score pour le leaderboard etc
     ld a, [STARTOF(OAM) + 4]
     cp a, 176
-    jp c, Bounce_on_top
+    jp c, BounceOnTop
 
     ld a, [wCntBallUnderPaddle]
     inc a
@@ -154,24 +205,22 @@ WaitVBlank2:
 ResetBall:
     ld a, 116
     ld [STARTOF(OAM) + 4], a
-    ld a, 60
+    ld a, 100
     ld [STARTOF(OAM) + 5], a
     ld a, 1
     ld [wBallMomentumX], a
     ld a, -1
     ld [wBallMomentumY], a
-    jp Main
+    ret
 
 ThisIsGameOver:
     call SaveScoreToSram
     call TransitionScreenToBlack
     ld a, 0
     ld [rLCDC], a
-    jp BrickInit
+    jp GlobalMenuInit
 
-
-
-Bounce_on_top:
+BounceOnTop:
     ld a, [STARTOF(OAM) + 4]
     sub a, 16 + 1
     ld c, a
@@ -185,6 +234,7 @@ Bounce_on_top:
     call CheckAndHandleBrick
     ld a, 1
     ld [wBallMomentumY], a
+
 BounceOnRight:
     ld a, [STARTOF(OAM) + 4]
     sub a, 16
@@ -215,22 +265,6 @@ BounceOnLeft:
     ld a, 1
     ld [wBallMomentumX], a
 
-; BounceOnBottom:
-;     ld a, [STARTOF(OAM) + 4]
-;     sub a, 16 - 1
-;     ld c, a
-;     ld a, [STARTOF(OAM) + 5]
-;     sub a, 8
-;     ld b, a
-;     call GetTileByPixel
-;     ld a, [hl]
-;     call IsWallTile
-;     jp nz, BounceDone
-;     call CheckAndHandleBrick
-;     ld a, -1
-;     ld [wBallMomentumY], a
-
-
 BounceDone:
     ld a, [STARTOF(OAM)]
     ld b, a
@@ -250,46 +284,19 @@ BounceDone:
     ld a, -1
     ld [wBallMomentumY], a
 
-
 PaddleBounceDone:
-	ld a, [wBrickCnt]
-	cp a, 0
-	jp nz, CheckLeft
+    ld a, [wBrickCnt]
+    cp a, 0
+    ret nz
 
-WaitVblankWin:
     call SaveScoreToSram
-	ld a, [rLY]
-	cp a, 144
-	jr c, WaitVblankWin
-	ld a, 0
-	ld [rLCDC], a
-	jp GlobalMenuInit
-
-CheckLeft:
-    ld a, [wCurKeys]
-    and a, PAD_LEFT
-    jp z, CheckRight
-Left:
-    ld a, [STARTOF(OAM) + 1]
-    ; vitesse par frame
-    dec a
-    cp a, 15
-    jp z, Main
-    ld [STARTOF(OAM) + 1], a
-    jp Main
-
-CheckRight:
-    ld a, [wCurKeys]
-    and a, PAD_RIGHT
-    jp z, Main
-Right:
-    ld a, [STARTOF(OAM) + 1]
-    ; vitesse par frame
-    inc a
-    cp a, 105
-    jp z, Main
-    ld [STARTOF(OAM) + 1], a
-    jp Main
+WaitVblankWin:
+    ld a, [rLY]
+    cp a, 144
+    jr c, WaitVblankWin
+    ld a, 0
+    ld [rLCDC], a
+    jp GlobalMenuInit
 
 
 SECTION "Counter", WRAM0
@@ -298,6 +305,9 @@ wFrameCounter: db
 SECTION "Ball Data", WRAM0
 wBallMomentumX: db
 wBallMomentumY: db
+
+SECTION "Ball speed data", WRAM0
+wBallSpeedValue: db
 
 SECTION "Brick Data", WRAM0
 wBrickCnt: db

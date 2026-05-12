@@ -27,6 +27,9 @@ CheckAndHandleBrick:
     daa
     ld [hl], a
     call UpdateScoreDisplay
+
+    ; ici on va check le score pour ensuite augmenter la speed de la balle et donc on va appeller une fonction qui va check tout les 3 de scores
+    call CheckScoreForBallSpeedIncrease
     ret
 
 CheckAndHandleBrickRight:
@@ -49,6 +52,11 @@ CheckAndHandleBrickRight:
     daa
     ld [hl], a
     call UpdateScoreDisplay
+
+    ; et donc ici aussi pareil donc le meme commentaire que pour le brick de gauche que je mets en dessous pour rappeller
+    ; ici on va check le score pour ensuite augmenter la speed de la balle et donc on va appeller une fonction qui va check tout les 3 de scores
+
+    call CheckScoreForBallSpeedIncrease
     ret
 
 IsWallTile:
@@ -82,4 +90,23 @@ UpdateScoreDisplay:
     add a, DIGIT_OFFSET
     ld hl, SCORE_RIGHT
     ld [hl], a
+    ret
+
+CheckScoreForBallSpeedIncrease:
+    ld a, [wScore]
+    and $0F
+    cp 3
+    jr z, .IncreaseSpeed
+    cp 6
+    jr z, .IncreaseSpeed
+    cp 9
+    jr z, .IncreaseSpeed
+    ret
+
+.IncreaseSpeed:
+    ld a, [wBallSpeedValue]
+    cp 3
+    ret z
+    inc a
+    ld [wBallSpeedValue], a
     ret
