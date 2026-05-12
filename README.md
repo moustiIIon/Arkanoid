@@ -110,11 +110,11 @@ src/
       brick_map.asm         données tilemap du niveau
 
     reaction/
-      reaction.asm          constantes état, ReactionInit, ReactionLoop
-      reaction_title.asm    écran titre + animation cadre tournant
-      reaction_difficulty.asm  sélection EASY/MEDIUM/HARD
-      reaction_game.asm     logique jeu, WinScreen, FailScreen, HUD round
-      reaction_sprites.asm  tiles OBJ (A, B, ↑, ↓, ←, →)
+      reaction.asm                constantes état, ReactionInit, ReactionLoop
+      reaction_title.asm          écran titre + animation cadre tournant
+      reaction_difficulty.asm     sélection EASY/MEDIUM/HARD
+      reaction_game.asm           logique jeu, WinScreen, FailScreen, HUD round
+      reaction_sprites.asm        tiles OBJ (A, B, ↑, ↓, ←, →)
 ```
 
 ### Machine à états — Reaction
