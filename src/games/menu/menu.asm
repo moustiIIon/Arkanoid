@@ -72,10 +72,10 @@ MenuMoveUp:
 
 MenuMoveDown:
     ld a, [wSelectedGame]
-    cp a, 1
+    cp a, 2
     jp z, GlobalMenuLoop
 
-    ld a, 1
+    inc a
     ld [wSelectedGame], a
     call UpdateCursor
     jp GlobalMenuLoop
@@ -84,7 +84,9 @@ MenuGameSelect:
     ld a, [wSelectedGame]
     cp a, 0
     jp z, LaunchArkanoid
-    jp LaunchReact
+    cp a, 1
+    jp z, LaunchReact
+    jp LaunchTouhou
 
 ; transition comme pokemon red gameboy, pour transitionner vers les jeux chacun, petit a petit ecran noir
 ; bon je penses ne pas faire comme pour un combat mais plus comme lorsque l'on rentre dans une grotte ou en passant par une porte donc
@@ -103,6 +105,12 @@ LaunchReact:
     ld [rLCDC], a
     jp ReactTitleScreen
 
+LaunchTouhou:
+    call TransitionScreenToBlack
+    ld a, 0
+    ld [rLCDC], a
+    jp TouhouInit
+
 ; efface le curseur et dessine sur le bon jeu seclectionné
 
 UpdateCursor:
@@ -112,10 +120,20 @@ UpdateCursor:
     ld hl, $98C4
     ld a, $00
     ld [hl], a
+    ld hl, $9904
+    ld a, $00
+    ld [hl], a
 
     ld a, [wSelectedGame]
     cp a, 0
     jr z, .cursorArkanoid
+    cp a, 1
+    jr z, .cursorReact
+.cursorTouhou:
+    ld hl, $9904
+    ld a, $0B
+    ld [hl], a
+    ret
 .cursorReact:
     ld hl, $98C4
     ld a, $0B
