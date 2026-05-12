@@ -1,4 +1,3 @@
-INCLUDE "hardware.inc"
 SECTION "Reaction Game", ROM0
 
 ;faire des constantes d'état pour avoir une meilleure lisibilité du code
