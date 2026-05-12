@@ -17,10 +17,15 @@ TouhouInit:
     ld a, 80
     ld [wPlayerY], a
 
+    ;init WRAM
     xor a
     ld [wTouhouState], a
     ld [wCurKeys], a
     ld [wNewKeys], a
+    ld [wPBullet0Active], a
+    ld [wPBullet1Active], a
+    ld [wPBullet2Active], a
+    ld [wFireCooldown], a
 
     ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON | LCDC_OBJ_16
     ld [rLCDC], a
@@ -44,3 +49,13 @@ SECTION "Touhou Vars", WRAM0
 wTouhouState: db
 wPlayerX: db
 wPlayerY: db
+wPBullet0X: db
+wPBullet0Y: db
+wPBullet0Active: db
+wPBullet1X: db
+wPBullet1Y: db
+wPBullet1Active: db
+wPBullet2X: db
+wPBullet2Y: db
+wPBullet2Active: db
+wFireCooldown: db

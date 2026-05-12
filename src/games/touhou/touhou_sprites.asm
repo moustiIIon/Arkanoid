@@ -20,4 +20,24 @@ Touhou_Sprite_Begin:
     INCBIN "src/assets/reimu.chr", $560, $10
     INCBIN "src/assets/reimu.chr", $660, $10
 
+; Tile 8 : Bullet (top, visible) — reutilise balle brick
+    dw `00033000
+    dw `00311300
+    dw `03011030
+    dw `03011030
+    dw `00311300
+    dw `00033000
+    dw `00000000
+    dw `00000000
+
+; Tile 9 : Bullet (bas, transparent) — requis par mode 8x16
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+    dw `00000000
+
 Touhou_Sprite_End:
