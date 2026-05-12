@@ -176,8 +176,8 @@ Right:
     jp Main
 
 
-; Deplace la balle de 1px et effectue toutes les verifications de collision.
-; Peut faire jp GlobalMenuInit directement si game over ou victoire.
+; Deplace la balle de 1px et effectue toutes les verifications de collision
+; donc le deplacement comme avant simplement si appellé plusieurs foix alors va bouger plus vite par definition
 BallPhysicsStep:
     ld a, [wBallMomentumX]
     ld b, a
