@@ -64,6 +64,100 @@ TouhouGameScreen:
 .applyDown:
     ld [wPlayerY], a
 
+.checkFire:
+    ; decrementer cooldown chaque frame
+    ld a, [wFireCooldown]
+    cp 0
+    jr z, .cooldownDone
+    dec a
+    ld [wFireCooldown], a
+    jr .updateBullets
+.cooldownDone:
+    ld a, [wCurKeys]
+    and PAD_A
+    jr z, .updateBullets
+    ; reset cooldown (10 frames entre chaque bullet)
+    ld a, 10
+    ld [wFireCooldown], a
+
+    ; chercher premier slot libre
+    ld a, [wPBullet0Active]
+    cp 0
+    jr nz, .trySlot1
+    ; slot 0 libre → tirer
+    ld a, 1
+    ld [wPBullet0Active], a
+    ld a, [wPlayerX]
+    add a, 4 ; centre X de Reimu (16px / 2 - 4)
+    ld [wPBullet0X], a
+    ld a, [wPlayerY]
+    ld [wPBullet0Y], a
+    jr .updateBullets
+
+.trySlot1:
+    ld a, [wPBullet1Active]
+    cp 0
+    jr nz, .trySlot2
+    ld a, 1
+    ld [wPBullet1Active], a
+    ld a, [wPlayerX]
+    add a, 4
+    ld [wPBullet1X], a
+    ld a, [wPlayerY]
+    ld [wPBullet1Y], a
+    jr .updateBullets
+
+.trySlot2:
+    ld a, [wPBullet2Active]
+    cp 0
+    jr nz, .updateBullets
+    ld a, 1
+    ld [wPBullet2Active], a
+    ld a, [wPlayerX]
+    add a, 4
+    ld [wPBullet2X], a
+    ld a, [wPlayerY]
+    ld [wPBullet2Y], a
+
+.updateBullets:
+    ld a, [wPBullet0Active]
+    cp 0
+    jr z, .upd1
+    ld a, [wPBullet0Y]
+    sub BULLET_SPEED
+    jr c, .deact0 ; sorti par le haut
+    ld [wPBullet0Y], a
+    jr .upd1
+.deact0:
+    xor a
+    ld [wPBullet0Active], a
+
+.upd1:
+    ld a, [wPBullet1Active]
+    cp 0
+    jr z, .upd2
+    ld a, [wPBullet1Y]
+    sub BULLET_SPEED
+    jr c, .deact1
+    ld [wPBullet1Y], a
+    jr .upd2
+.deact1:
+    xor a
+    ld [wPBullet1Active], a
+
+.upd2:
+    ld a, [wPBullet2Active]
+    cp 0
+    jr z, .updateOAM
+    ld a, [wPBullet2Y]
+    sub BULLET_SPEED
+    jr c, .deact2
+    ld [wPBullet2Y], a
+    jr .updateOAM
+.deact2:
+    xor a
+    ld [wPBullet2Active], a
+
 .updateOAM:
     ; sprites 0-3 : Reimu (16x32, 4 entrees 8x16)
     ld a, [wPlayerY]
