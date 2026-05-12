@@ -4,10 +4,10 @@ DEF PLAYER_SPEED EQU 2
 DEF PLAYER_X_MIN EQU 0
 DEF PLAYER_X_MAX EQU 144
 DEF PLAYER_Y_MIN EQU 0
-DEF PLAYER_Y_MAX EQU 112
+DEF PLAYER_Y_MAX EQU 120
 DEF BULLET_SPEED EQU 4
 DEF BULLET_FRAMES EQU 10
-DEF BULLET_TILE EQU 8
+DEF BULLET_TILE EQU 6
 
 TouhouGameScreen:
     ld a, [wCurKeys]
@@ -166,7 +166,7 @@ TouhouGameScreen:
     ld [wPBullet2Active], a
 
 .updateOAM:
-    ; sprites 0-3 : Reimu (16x32, 4 entrees 8x16)
+    ; sprites 0-5 : Reimu (16x24, 6 entrees 8x8)
     ld a, [wPlayerY]
     add a, 16
     ld [$FE00], a
@@ -183,91 +183,113 @@ TouhouGameScreen:
     ld a, [wPlayerX]
     add a, 16
     ld [$FE05], a
-    ld a, 2
+    ld a, 1
     ld [$FE06], a
     xor a
     ld [$FE07], a
 
     ld a, [wPlayerY]
-    add a, 32
+    add a, 24
     ld [$FE08], a
     ld a, [wPlayerX]
     add a, 8
     ld [$FE09], a
-    ld a, 4
+    ld a, 2
     ld [$FE0A], a
     xor a
     ld [$FE0B], a
 
     ld a, [wPlayerY]
-    add a, 32
+    add a, 24
     ld [$FE0C], a
     ld a, [wPlayerX]
     add a, 16
     ld [$FE0D], a
-    ld a, 6
+    ld a, 3
     ld [$FE0E], a
     xor a
     ld [$FE0F], a
 
-    ; sprite 4 : bullet 0
+    ld a, [wPlayerY]
+    add a, 32
+    ld [$FE10], a
+    ld a, [wPlayerX]
+    add a, 8
+    ld [$FE11], a
+    ld a, 4
+    ld [$FE12], a
+    xor a
+    ld [$FE13], a
+
+    ld a, [wPlayerY]
+    add a, 32
+    ld [$FE14], a
+    ld a, [wPlayerX]
+    add a, 16
+    ld [$FE15], a
+    ld a, 5
+    ld [$FE16], a
+    xor a
+    ld [$FE17], a
+
+    ; sprite 6 : bullet 0
     ld a, [wPBullet0Active]
     cp 0
     jr z, .hideBullet0
     ld a, [wPBullet0Y]
     add a, 16
-    ld [$FE10], a
-    ld a, [wPBullet0X]
-    add a, 8
-    ld [$FE11], a
-    ld a, BULLET_TILE
-    ld [$FE12], a
-    xor a
-    ld [$FE13], a
-    jr .oamBullet1
-.hideBullet0:
-    xor a
-    ld [$FE10], a
-
-    ; sprite 5 : bullet 1
-.oamBullet1:
-    ld a, [wPBullet1Active]
-    cp 0
-    jr z, .hideBullet1
-    ld a, [wPBullet1Y]
-    add a, 16
-    ld [$FE14], a
-    ld a, [wPBullet1X]
-    add a, 8
-    ld [$FE15], a
-    ld a, BULLET_TILE
-    ld [$FE16], a
-    xor a
-    ld [$FE17], a
-    jr .oamBullet2
-.hideBullet1:
-    xor a
-    ld [$FE14], a
-
-    ; sprite 6 : bullet 2
-.oamBullet2:
-    ld a, [wPBullet2Active]
-    cp 0
-    jr z, .hideBullet2
-    ld a, [wPBullet2Y]
-    add a, 16
     ld [$FE18], a
-    ld a, [wPBullet2X]
+    ld a, [wPBullet0X]
     add a, 8
     ld [$FE19], a
     ld a, BULLET_TILE
     ld [$FE1A], a
     xor a
     ld [$FE1B], a
+    jr .oamBullet1
+.hideBullet0:
+    xor a
+    ld [$FE18], a
+
+    ; sprite 7 : bullet 1
+.oamBullet1:
+    ld a, [wPBullet1Active]
+    cp 0
+    jr z, .hideBullet1
+    ld a, [wPBullet1Y]
+    add a, 16
+    ld [$FE1C], a
+    ld a, [wPBullet1X]
+    add a, 8
+    ld [$FE1D], a
+    ld a, BULLET_TILE
+    ld [$FE1E], a
+    xor a
+    ld [$FE1F], a
+    jr .oamBullet2
+.hideBullet1:
+    xor a
+    ld [$FE1C], a
+
+    ; sprite 8 : bullet 2
+.oamBullet2:
+    ld a, [wPBullet2Active]
+    cp 0
+    jr z, .hideBullet2
+    ld a, [wPBullet2Y]
+    add a, 16
+    ld [$FE20], a
+    ld a, [wPBullet2X]
+    add a, 8
+    ld [$FE21], a
+    ld a, BULLET_TILE
+    ld [$FE22], a
+    xor a
+    ld [$FE23], a
     jp TouhouLoop
 .hideBullet2:
     xor a
-    ld [$FE18], a
+    ld [$FE20], a
 
     jp TouhouLoop
 
