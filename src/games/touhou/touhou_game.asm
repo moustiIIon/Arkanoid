@@ -109,6 +109,65 @@ TouhouGameScreen:
     xor a
     ld [$FE0F], a
 
+    ; sprite 4 : bullet 0
+    ld a, [wPBullet0Active]
+    cp 0
+    jr z, .hideBullet0
+    ld a, [wPBullet0Y]
+    add a, 16
+    ld [$FE10], a
+    ld a, [wPBullet0X]
+    add a, 8
+    ld [$FE11], a
+    ld a, BULLET_TILE
+    ld [$FE12], a
+    xor a
+    ld [$FE13], a
+    jr .oamBullet1
+.hideBullet0:
+    xor a
+    ld [$FE10], a
+
+    ; sprite 5 : bullet 1
+.oamBullet1:
+    ld a, [wPBullet1Active]
+    cp 0
+    jr z, .hideBullet1
+    ld a, [wPBullet1Y]
+    add a, 16
+    ld [$FE14], a
+    ld a, [wPBullet1X]
+    add a, 8
+    ld [$FE15], a
+    ld a, BULLET_TILE
+    ld [$FE16], a
+    xor a
+    ld [$FE17], a
+    jr .oamBullet2
+.hideBullet1:
+    xor a
+    ld [$FE14], a
+
+    ; sprite 6 : bullet 2
+.oamBullet2:
+    ld a, [wPBullet2Active]
+    cp 0
+    jr z, .hideBullet2
+    ld a, [wPBullet2Y]
+    add a, 16
+    ld [$FE18], a
+    ld a, [wPBullet2X]
+    add a, 8
+    ld [$FE19], a
+    ld a, BULLET_TILE
+    ld [$FE1A], a
+    xor a
+    ld [$FE1B], a
+    jp TouhouLoop
+.hideBullet2:
+    xor a
+    ld [$FE18], a
+
     jp TouhouLoop
 
 TouhouGameOver:
