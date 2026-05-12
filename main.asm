@@ -49,6 +49,10 @@ INCLUDE "src/games/reaction/reaction_difficulty.asm"
 INCLUDE "src/games/reaction/reaction_game.asm"
 INCLUDE "src/games/reaction/reaction_sprites.asm"
 
+INCLUDE "src/games/touhou/touhou.asm"
+INCLUDE "src/games/touhou/touhou_game.asm"
+INCLUDE "src/games/touhou/touhou_sprites.asm"
+
 INCLUDE "src/games/menu/menu.asm"
 INCLUDE "src/games/menu/menu_map.asm"
 INCLUDE "src/core/transition.asm"

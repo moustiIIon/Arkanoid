@@ -1,29 +1,23 @@
 SECTION "Touhou Sprites", ROM0
 
-; Touhou_Sprite_Begin:
-;     INCBIN "src/assets/reimu.chr"
-; Touhou_Sprite_End:
-
 Touhou_Sprite_Begin:
+; Sprite Reimu 2x4 tiles (16x32px), extrait depuis reimu.chr
+; Layout 8x16 mode : tile N = haut, tile N+1 = bas
 
-; Tile 0 : Reimu tête (haut)
-    dw `00333300
-    dw `03333330
-    dw `33233233
-    dw `33333333
-    dw `33300333
-    dw `33333333
-    dw `03333330
-    dw `00333300
+; Tile 0+1 : colonne gauche, moitie haute (OAM sprite 0)
+    INCBIN "src/assets/reimu.chr", $350, $10
+    INCBIN "src/assets/reimu.chr", $450, $10
 
-; Tile 1 : Reimu corps (bas)
-    dw `00033000
-    dw `03333330
-    dw `03133130
-    dw `03333330
-    dw `33333333
-    dw `32333332
-    dw `33333333
-    dw `03300330
+; Tile 2+3 : colonne droite, moitie haute (OAM sprite 1)
+    INCBIN "src/assets/reimu.chr", $360, $10
+    INCBIN "src/assets/reimu.chr", $460, $10
+
+; Tile 4+5 : colonne gauche, moitie basse (OAM sprite 2)
+    INCBIN "src/assets/reimu.chr", $550, $10
+    INCBIN "src/assets/reimu.chr", $650, $10
+
+; Tile 6+7 : colonne droite, moitie basse (OAM sprite 3)
+    INCBIN "src/assets/reimu.chr", $560, $10
+    INCBIN "src/assets/reimu.chr", $660, $10
 
 Touhou_Sprite_End:

@@ -1,10 +1,10 @@
 SECTION "Touhou Game Screen", ROM0
 
 DEF PLAYER_SPEED EQU 2
-DEF PLAYER_X_MIN EQU 8
-DEF PLAYER_X_MAX EQU 152
-DEF PLAYER_Y_MIN EQU 8
-DEF PLAYER_Y_MAX EQU 128
+DEF PLAYER_X_MIN EQU 0
+DEF PLAYER_X_MAX EQU 144   ; droite : X+16 = 160 (bord ecran)
+DEF PLAYER_Y_MIN EQU 0
+DEF PLAYER_Y_MAX EQU 112   ; bas : Y+32 = 144 (bord ecran)
 
 TouhouGameScreen:
     ; LEFT
@@ -64,6 +64,7 @@ TouhouGameScreen:
     ld [wPlayerY], a
 
 .updateOAM:
+    ; sprite 0 : colonne gauche, moitie haute
     ld a, [wPlayerY]
     add a, 16
     ld [$FE00], a
@@ -71,8 +72,45 @@ TouhouGameScreen:
     add a, 8
     ld [$FE01], a
     xor a
-    ld [$FE02], a
-    ld [$FE03], a
+    ld [$FE02], a        ; tile 0
+    ld [$FE03], a        ; flags
+
+    ; sprite 1 : colonne droite, moitie haute
+    ld a, [wPlayerY]
+    add a, 16
+    ld [$FE04], a
+    ld a, [wPlayerX]
+    add a, 16
+    ld [$FE05], a
+    ld a, 2
+    ld [$FE06], a        ; tile 2
+    xor a
+    ld [$FE07], a
+
+    ; sprite 2 : colonne gauche, moitie basse
+    ld a, [wPlayerY]
+    add a, 32
+    ld [$FE08], a
+    ld a, [wPlayerX]
+    add a, 8
+    ld [$FE09], a
+    ld a, 4
+    ld [$FE0A], a        ; tile 4
+    xor a
+    ld [$FE0B], a
+
+    ; sprite 3 : colonne droite, moitie basse
+    ld a, [wPlayerY]
+    add a, 32
+    ld [$FE0C], a
+    ld a, [wPlayerX]
+    add a, 16
+    ld [$FE0D], a
+    ld a, 6
+    ld [$FE0E], a        ; tile 6
+    xor a
+    ld [$FE0F], a
+
     jp TouhouLoop
 
 TouhouGameOver:

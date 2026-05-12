@@ -12,9 +12,9 @@ TouhouInit:
     ld bc, Touhou_Sprite_End - Touhou_Sprite_Begin
     call MemCpy
 
-    ld a, 76
+    ld a, 72
     ld [wPlayerX], a
-    ld a, 120
+    ld a, 80
     ld [wPlayerY], a
 
     xor a
