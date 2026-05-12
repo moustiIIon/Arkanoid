@@ -1,12 +1,13 @@
 SECTION "Touhou Game Screen", ROM0
 
-DEF PLAYER_SPEED  EQU 2
-DEF PLAYER_X_MIN  EQU 0
-DEF PLAYER_X_MAX  EQU 144
-DEF PLAYER_Y_MIN  EQU 0
-DEF PLAYER_Y_MAX  EQU 112
-DEF BULLET_SPEED  EQU 3
-DEF BULLET_TILE   EQU 8
+DEF PLAYER_SPEED EQU 2
+DEF PLAYER_X_MIN EQU 0
+DEF PLAYER_X_MAX EQU 144
+DEF PLAYER_Y_MIN EQU 0
+DEF PLAYER_Y_MAX EQU 112
+DEF BULLET_SPEED EQU 4
+DEF BULLET_FRAMES EQU 10
+DEF BULLET_TILE EQU 8
 
 TouhouGameScreen:
     ld a, [wCurKeys]
@@ -77,47 +78,53 @@ TouhouGameScreen:
     and PAD_A
     jr z, .updateBullets
     ; reset cooldown (10 frames entre chaque bullet)
-    ld a, 10
+    ld a, BULLET_FRAMES
     ld [wFireCooldown], a
 
-    ; chercher premier slot libre
-    ld a, [wPBullet0Active]
-    cp 0
-    jr nz, .trySlot1
-    ; slot 0 libre → tirer
+    ; round-robin : ecrire dans le slot courant et avancer
+    ld a, [wPlayerX]
+    add a, 4
+    ld b, a
+    ld a, [wPlayerY]
+    ld c, a
+
+    ld a, [wFireSlot]
+    cp 1
+    jr z, .fireSlot1
+    cp 2
+    jr z, .fireSlot2
+
+.fireSlot0:
     ld a, 1
     ld [wPBullet0Active], a
-    ld a, [wPlayerX]
-    add a, 4 ; centre X de Reimu (16px / 2 - 4)
+    ld a, b
     ld [wPBullet0X], a
-    ld a, [wPlayerY]
+    ld a, c
     ld [wPBullet0Y], a
+    ld a, 1
+    ld [wFireSlot], a
     jr .updateBullets
 
-.trySlot1:
-    ld a, [wPBullet1Active]
-    cp 0
-    jr nz, .trySlot2
+.fireSlot1:
     ld a, 1
     ld [wPBullet1Active], a
-    ld a, [wPlayerX]
-    add a, 4
+    ld a, b
     ld [wPBullet1X], a
-    ld a, [wPlayerY]
+    ld a, c
     ld [wPBullet1Y], a
+    ld a, 2
+    ld [wFireSlot], a
     jr .updateBullets
 
-.trySlot2:
-    ld a, [wPBullet2Active]
-    cp 0
-    jr nz, .updateBullets
+.fireSlot2:
     ld a, 1
     ld [wPBullet2Active], a
-    ld a, [wPlayerX]
-    add a, 4
+    ld a, b
     ld [wPBullet2X], a
-    ld a, [wPlayerY]
+    ld a, c
     ld [wPBullet2Y], a
+    xor a
+    ld [wFireSlot], a
 
 .updateBullets:
     ld a, [wPBullet0Active]

@@ -26,6 +26,7 @@ TouhouInit:
     ld [wPBullet1Active], a
     ld [wPBullet2Active], a
     ld [wFireCooldown], a
+    ld [wFireSlot], a
 
     ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON | LCDC_OBJ_16
     ld [rLCDC], a
@@ -59,3 +60,4 @@ wPBullet2X: db
 wPBullet2Y: db
 wPBullet2Active: db
 wFireCooldown: db
+wFireSlot: db
