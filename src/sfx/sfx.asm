@@ -13,15 +13,14 @@ InitAndStartAPU:
 
 
 MusicSelectSfx:
-    ld a, $00
+    ld a, $16
     ldh [rNR10], a
-    ld a, $00
+    ld a, $C0
     ldh [rNR11], a
-    ld a, $00
+    ld a, $F2
     ldh [rNR12], a
-    ld a, $00
+    ld a, $A0
     ldh [rNR13], a
-    ld a, $00
+    ld a, $C6
     ldh [rNR14], a
     ret
-
