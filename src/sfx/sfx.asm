@@ -10,3 +10,18 @@ InitAndStartAPU:
     ld a, $FF
     ldh [rNR51], a
     ret
+
+
+MusicSelectSfx:
+    ld a, $00
+    ldh [rNR10], a
+    ld a, $00
+    ldh [rNR11], a
+    ld a, $00
+    ldh [rNR12], a
+    ld a, $00
+    ldh [rNR13], a
+    ld a, $00
+    ldh [rNR14], a
+    ret
+
