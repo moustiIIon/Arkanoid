@@ -23,7 +23,7 @@ TouhouInit:
     ld [wPBullet2Active], a
     ld [wFireCooldown], a
     ld [wFireSlot], a
-    ld [wFrameCounter], a
+    ld [wTouhouFrame], a
     ld [wInvincTimer], a
     ld [wWaveIndex], a
     ld [wBossActive], a
@@ -42,9 +42,9 @@ TouhouLoop:
     call MyWaitVBlank
     call UpdateKeys
 
-    ld a, [wFrameCounter]
+    ld a, [wTouhouFrame]
     inc a
-    ld [wFrameCounter], a
+    ld [wTouhouFrame], a
 
     ld a, [wTouhouState]
     cp TOUHOU_STATE_WAVE
@@ -59,7 +59,7 @@ TouhouLoop:
 
 SECTION "Touhou Vars", WRAM0
 wTouhouState: db
-wFrameCounter: db
+wTouhouFrame: db
 wPlayerX: db
 wPlayerY: db
 wPlayerLives: db
