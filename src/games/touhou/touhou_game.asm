@@ -293,6 +293,15 @@ TouhouGameScreen:
 
     jp TouhouLoop
 
+TouhouWinScreen:
+    ld a, [wNewKeys]
+    and PAD_START
+    jp z, TouhouLoop
+    call TransitionScreenToBlack
+    xor a
+    ld [rLCDC], a
+    jp GlobalMenuInit
+
 TouhouGameOver:
     ld a, [wNewKeys]
     and PAD_START

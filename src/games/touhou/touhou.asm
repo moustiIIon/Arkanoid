@@ -1,9 +1,6 @@
 INCLUDE "hardware.inc"
 SECTION "Touhou Game", ROM0
 
-DEF TOUHOU_STATE_GAME EQU 0
-DEF TOUHOU_STATE_OVER EQU 1
-
 TouhouInit:
     call CommonInit
 
@@ -17,7 +14,6 @@ TouhouInit:
     ld a, 80
     ld [wPlayerY], a
 
-    ;init WRAM
     xor a
     ld [wTouhouState], a
     ld [wCurKeys], a
@@ -27,6 +23,13 @@ TouhouInit:
     ld [wPBullet2Active], a
     ld [wFireCooldown], a
     ld [wFireSlot], a
+    ld [wFrameCounter], a
+    ld [wInvincTimer], a
+    ld [wWaveIndex], a
+    ld [wBossActive], a
+    ld [wBossHP], a
+    ld a, 5
+    ld [wPlayerLives], a
 
     ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
     ld [rLCDC], a
@@ -39,17 +42,28 @@ TouhouLoop:
     call MyWaitVBlank
     call UpdateKeys
 
+    ld a, [wFrameCounter]
+    inc a
+    ld [wFrameCounter], a
+
     ld a, [wTouhouState]
-    cp TOUHOU_STATE_GAME
+    cp TOUHOU_STATE_WAVE
     jp z, TouhouGameScreen
+    cp TOUHOU_STATE_BOSS
+    jp z, TouhouGameScreen
+    cp TOUHOU_STATE_WIN
+    jp z, TouhouWinScreen
     cp TOUHOU_STATE_OVER
     jp z, TouhouGameOver
     jp TouhouLoop
 
 SECTION "Touhou Vars", WRAM0
 wTouhouState: db
+wFrameCounter: db
 wPlayerX: db
 wPlayerY: db
+wPlayerLives: db
+wInvincTimer: db
 wPBullet0X: db
 wPBullet0Y: db
 wPBullet0Active: db
@@ -61,3 +75,37 @@ wPBullet2Y: db
 wPBullet2Active: db
 wFireCooldown: db
 wFireSlot: db
+
+wBossActive: db
+wBossHP: db
+wBossX: db
+wBossY: db
+wBossPhase: db
+wBossDX: db
+wBossShootTimer: db
+
+; boss qui tire des balles
+wBossBulX: ds 24
+wBossBulY: ds 24
+wBossBulActive: ds 24
+wBossBulDX: ds 24
+wBossBulDY: ds 24
+
+; submoids boss phase 2 
+wSub0X: db
+wSub0Y: db
+wSub0HP: db
+wSub0Active: db
+wSub0BulX: db
+wSub0BulY: db
+wSub0BulActive: db
+wSub0ShootTimer: db
+
+wSub1X: db
+wSub1Y: db
+wSub1HP: db
+wSub1Active: db
+wSub1BulX: db
+wSub1BulY: db
+wSub1BulActive: db
+wSub1ShootTimer: db
