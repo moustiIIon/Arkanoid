@@ -2,20 +2,34 @@ SECTION "Touhou Wave", ROM0
 
 DEF TOUHOU_STATE_WAVE EQU 0
 DEF TOUHOU_STATE_BOSS EQU 1
-DEF TOUHOU_STATE_WIN  EQU 2
+DEF TOUHOU_STATE_WIN EQU 2
 DEF TOUHOU_STATE_OVER EQU 3
 
 DEF ENEMY_COUNT EQU 4
-DEF ENEMY_HP_INIT EQU 3
+DEF ENEMY_HP_INIT EQU 2
 DEF ENEMY_SPEED EQU 1
-DEF ENEMY_BULLET_SPD EQU 2
-DEF ENEMY_SHOOT_RATE EQU 60
+DEF ENEMY_BULLET_SPD EQU 3
+DEF ENEMY_SHOOT_RATE EQU 20
 
-; hitbox Reimu : centre du sprite 16x24
 DEF HITBOX_OFF_X EQU 6
 DEF HITBOX_OFF_Y EQU 10
 DEF HITBOX_SIZE EQU 4
 DEF INVINC_FRAMES EQU 60
+
+DEF ENEMY_TILE EQU 7
+DEF ENBUL_TILE EQU 8
+DEF BOSS_TILE  EQU 9 ; Sakuya 2x3 tiles (9-14), grille identique à Reimu
+
+;remplis 4 octets consécutifs en WRAM avec une valeur immédiate
+;usage : FILL4 adresse, valeur
+MACRO FILL4
+    ld hl, \1
+    ld a, \2
+    ld [hli], a
+    ld [hli], a
+    ld [hli], a
+    ld [hl], a
+ENDM
 
 TouhouWaveInit:
     xor a
@@ -36,7 +50,7 @@ SpawnWave:
     ret
 
 .wave0:
-    ; 4 ennemis diagonaux (en haut à gauche vers en bas à droite) : X=8,44,80,116 Y=0 DX=+1 DY=+1
+    ; diagonale (haut gauche vers bas droite) : X=8,44,80,116  DX=+1 DY=+1
     ld hl, wEnemyX
     ld a, 8
     ld [hli], a
@@ -46,29 +60,90 @@ SpawnWave:
     ld [hli], a
     ld a, 116
     ld [hl], a
+    FILL4 wEnemyY,  0
+    FILL4 wEnemyDX, ENEMY_SPEED
+    FILL4 wEnemyDY, ENEMY_SPEED
+    jr .initCommon
 
-    ld hl, wEnemyY
+.wave1:
+    ; diagonale (haut droite vers bas gauche) : X=116,80,44,8  DX=-1 DY=+1
+    ld hl, wEnemyX
+    ld a, 116
+    ld [hli], a
+    ld a, 80
+    ld [hli], a
+    ld a, 44
+    ld [hli], a
+    ld a, 8
+    ld [hl], a
+    FILL4 wEnemyY,  0
+    FILL4 wEnemyDX, -ENEMY_SPEED & $FF
+    FILL4 wEnemyDY, ENEMY_SPEED
+    jr .initCommon
+
+.wave2:
+    ;horizontal : 2 depuis gauche (Y=20,50) + 2 depuis droite (Y=20,50)
+    ld hl, wEnemyX
     xor a
     ld [hli], a
     ld [hli], a
+    ld a, 160
     ld [hli], a
+    ld [hl], a
+
+    ld hl, wEnemyY
+    ld a, 20
+    ld [hli], a
+    ld a, 50
+    ld [hli], a
+    ld a, 20
+    ld [hli], a
+    ld a, 50
     ld [hl], a
 
     ld hl, wEnemyDX
     ld a, ENEMY_SPEED
     ld [hli], a
     ld [hli], a
+    ld a, -ENEMY_SPEED & $FF
     ld [hli], a
     ld [hl], a
 
-    ld hl, wEnemyDY
-    ld a, ENEMY_SPEED
-    ld [hli], a
-    ld [hli], a
-    ld [hli], a
-    ld [hl], a
-    jr .initCommon
+    FILL4 wEnemyDY, 1
 
+.initCommon:
+    FILL4 wEnemyActive, 1
+    FILL4 wEnemyHP, ENEMY_HP_INIT
+    FILL4 wEnemyBulActive, 0
+    FILL4 wEnemyShootTimer, 0
+    ret
+
+UpdateWave:
+    call UpdateEnemies
+    call UpdateEnemyBullets
+    call CheckEnemyBulletsVsReimu
+    call CheckPlayerBulletsVsEnemies
+    call CheckWaveDone
+    ret
+
+CheckWaveDone:
+    ld a, [wEnemyActive]
+    or a
+    ret nz
+    ld a, [wEnemyActive + 1]
+    or a
+    ret nz
+    ld a, [wEnemyActive + 2]
+    or a
+    ret nz
+    ld a, [wEnemyActive + 3]
+    or a
+    ret nz
+    ld a, [wWaveIndex]
+    inc a
+    ld [wWaveIndex], a
+    call SpawnWave
+    ret
 
 SECTION "Wave WRAM", WRAM0
 wWaveIndex: db
