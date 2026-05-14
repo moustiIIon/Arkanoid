@@ -5,11 +5,25 @@ DEF PLAYER_X_MIN EQU 0
 DEF PLAYER_X_MAX EQU 144
 DEF PLAYER_Y_MIN EQU 0
 DEF PLAYER_Y_MAX EQU 120
-DEF BULLET_SPEED EQU 4
-DEF BULLET_FRAMES EQU 10
+DEF BULLET_SPEED EQU 7
+DEF BULLET_FRAMES EQU 5
 DEF BULLET_TILE EQU 6
 
 TouhouGameScreen:
+    ; décrémenter invincibilité
+    ld a, [wInvincTimer]
+    cp 0
+    jr z, .skipInvinc
+    dec a
+    ld [wInvincTimer], a
+.skipInvinc:
+    ; logique de vague ou boss selon état
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_WAVE
+    jr nz, .skipWave
+    call UpdateWave
+.skipWave:
+
     ld a, [wCurKeys]
     and PAD_LEFT
     jr z, .checkRight
@@ -166,6 +180,13 @@ TouhouGameScreen:
     ld [wPBullet2Active], a
 
 .updateOAM:
+    jp TouhouLoop
+
+; TouhouRenderOAM : appelé en tout premier après VBlank
+; Écrit l'OAM avec les positions calculées la frame précédente
+TouhouRenderOAM:
+    call RenderEnemyOAM
+
     ; sprites 0-5 : Reimu (16x24, 6 entrees 8x8)
     ld a, [wPlayerY]
     add a, 16
@@ -286,12 +307,11 @@ TouhouGameScreen:
     ld [$FE22], a
     xor a
     ld [$FE23], a
-    jp TouhouLoop
+    ret
 .hideBullet2:
     xor a
     ld [$FE20], a
-
-    jp TouhouLoop
+    ret
 
 TouhouWinScreen:
     ld a, [wNewKeys]
