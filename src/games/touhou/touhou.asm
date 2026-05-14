@@ -31,6 +31,8 @@ TouhouInit:
     ld a, 5
     ld [wPlayerLives], a
 
+    call TouhouWaveInit
+
     ld a, LCDC_ON | LCDC_BG_ON | LCDC_OBJ_ON
     ld [rLCDC], a
     ld a, %11100100
@@ -40,6 +42,7 @@ TouhouInit:
 
 TouhouLoop:
     call MyWaitVBlank
+    call TouhouRenderOAM
     call UpdateKeys
 
     ld a, [wTouhouFrame]
