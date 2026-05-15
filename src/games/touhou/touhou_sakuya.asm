@@ -24,13 +24,17 @@ BossInit:
 MoveBoss:
     ld a, [wBossX]
     ld c, a
-    xor a
     ld a, [wBossDX]
     add a, c
     cp WRAP_THRESHOLD
     jr nc, .bounceL
     cp BOSS_X_MAX + 1
-    jr c, .applyX
+    jr nc, .bounceR
+    cp BOSS_X_MIN
+    jr c, .bounceL
+    ld [wBossX], a
+    ret
+.bounceR:
     ld a, BOSS_X_MAX
     ld [wBossX], a
     ld a, -BOSS_SPEED & $FF
@@ -41,9 +45,6 @@ MoveBoss:
     ld [wBossX], a
     ld a, BOSS_SPEED
     ld [wBossDX], a
-    ret
-.applyX:
-    ld [wBossX], a
     ret
 
 UpdateBoss:
