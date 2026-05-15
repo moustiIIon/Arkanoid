@@ -61,3 +61,5 @@ INCLUDE "src/games/touhou/touhou_sakuya_render.asm"
 INCLUDE "src/games/menu/menu.asm"
 INCLUDE "src/games/menu/menu_map.asm"
 INCLUDE "src/core/transition.asm"
+
+INCLUDE "src/sfx/sfx.asm"

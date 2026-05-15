@@ -28,6 +28,9 @@ CheckAndHandleBrick:
     ld [hl], a
     call UpdateScoreDisplay
 
+    ; ajout de la fonction permettant de jouer le sfx ici car brick touché
+    call BrickBreakSfx
+
     ; ici on va check le score pour ensuite augmenter la speed de la balle et donc on va appeller une fonction qui va check tout les 3 de scores
     call CheckScoreForBallSpeedIncrease
     ret
@@ -52,6 +55,9 @@ CheckAndHandleBrickRight:
     daa
     ld [hl], a
     call UpdateScoreDisplay
+
+    ; ici aussi sfx joué car birck touché
+    call BrickBreakSfx
 
     ; et donc ici aussi pareil donc le meme commentaire que pour le brick de gauche que je mets en dessous pour rappeller
     ; ici on va check le score pour ensuite augmenter la speed de la balle et donc on va appeller une fonction qui va check tout les 3 de scores
