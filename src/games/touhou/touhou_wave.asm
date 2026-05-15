@@ -47,6 +47,7 @@ SpawnWave:
     jr z, .wave2
     ld a, TOUHOU_STATE_BOSS
     ld [wTouhouState], a
+    call BossInit
     ret
 
 .wave0:

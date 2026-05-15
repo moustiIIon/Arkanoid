@@ -22,7 +22,16 @@ TouhouGameScreen:
     cp TOUHOU_STATE_WAVE
     jr nz, .skipWave
     call UpdateWave
+    ; si UpdateWave vient de déclencher le boss, attendre le prochain VBlank
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_BOSS
+    jp z, TouhouLoop
 .skipWave:
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_BOSS
+    jr nz, .skipBoss
+    call UpdateBoss
+.skipBoss:
 
     ld a, [wCurKeys]
     and PAD_LEFT
@@ -185,132 +194,141 @@ TouhouGameScreen:
 ; TouhouRenderOAM : appelé en tout premier après VBlank
 ; Écrit l'OAM avec les positions calculées la frame précédente
 TouhouRenderOAM:
+    ; selon l'état : afficher ennemis OU Sakuya, jamais les deux
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_BOSS
+    jr z, .renderBoss
     call RenderEnemyOAM
-
-    ; sprites 0-5 : Reimu (16x24, 6 entrees 8x8)
+    call ClearBossOAM
+    jr .renderReimu
+.renderBoss:
+    call RenderBossOAM
+    call ClearEnemyOAM
+.renderReimu:
+    ; Reimu — sprites 6-11 à OAM_REIMU ($FE18), tiles 0-5
     ld a, [wPlayerY]
     add a, 16
-    ld [$FE00], a
+    ld [OAM_REIMU], a
     ld a, [wPlayerX]
     add a, 8
-    ld [$FE01], a
+    ld [OAM_REIMU + 1], a
     xor a
-    ld [$FE02], a
-    ld [$FE03], a
+    ld [OAM_REIMU + 2], a
+    ld [OAM_REIMU + 3], a
 
     ld a, [wPlayerY]
     add a, 16
-    ld [$FE04], a
+    ld [OAM_REIMU + 4], a
     ld a, [wPlayerX]
     add a, 16
-    ld [$FE05], a
+    ld [OAM_REIMU + 5], a
     ld a, 1
-    ld [$FE06], a
+    ld [OAM_REIMU + 6], a
     xor a
-    ld [$FE07], a
+    ld [OAM_REIMU + 7], a
 
     ld a, [wPlayerY]
     add a, 24
-    ld [$FE08], a
+    ld [OAM_REIMU + 8], a
     ld a, [wPlayerX]
     add a, 8
-    ld [$FE09], a
+    ld [OAM_REIMU + 9], a
     ld a, 2
-    ld [$FE0A], a
+    ld [OAM_REIMU + 10], a
     xor a
-    ld [$FE0B], a
+    ld [OAM_REIMU + 11], a
 
     ld a, [wPlayerY]
     add a, 24
-    ld [$FE0C], a
+    ld [OAM_REIMU + 12], a
     ld a, [wPlayerX]
     add a, 16
-    ld [$FE0D], a
+    ld [OAM_REIMU + 13], a
     ld a, 3
-    ld [$FE0E], a
+    ld [OAM_REIMU + 14], a
     xor a
-    ld [$FE0F], a
+    ld [OAM_REIMU + 15], a
 
     ld a, [wPlayerY]
     add a, 32
-    ld [$FE10], a
+    ld [OAM_REIMU + 16], a
     ld a, [wPlayerX]
     add a, 8
-    ld [$FE11], a
+    ld [OAM_REIMU + 17], a
     ld a, 4
-    ld [$FE12], a
+    ld [OAM_REIMU + 18], a
     xor a
-    ld [$FE13], a
+    ld [OAM_REIMU + 19], a
 
     ld a, [wPlayerY]
     add a, 32
-    ld [$FE14], a
+    ld [OAM_REIMU + 20], a
     ld a, [wPlayerX]
     add a, 16
-    ld [$FE15], a
+    ld [OAM_REIMU + 21], a
     ld a, 5
-    ld [$FE16], a
+    ld [OAM_REIMU + 22], a
     xor a
-    ld [$FE17], a
+    ld [OAM_REIMU + 23], a
 
-    ; sprite 6 : bullet 0
+    ; sprite 12 : balle joueur 0
     ld a, [wPBullet0Active]
     cp 0
     jr z, .hideBullet0
     ld a, [wPBullet0Y]
     add a, 16
-    ld [$FE18], a
+    ld [OAM_PBUL0], a
     ld a, [wPBullet0X]
     add a, 8
-    ld [$FE19], a
+    ld [OAM_PBUL0 + 1], a
     ld a, BULLET_TILE
-    ld [$FE1A], a
+    ld [OAM_PBUL0 + 2], a
     xor a
-    ld [$FE1B], a
+    ld [OAM_PBUL0 + 3], a
     jr .oamBullet1
 .hideBullet0:
     xor a
-    ld [$FE18], a
+    ld [OAM_PBUL0], a
 
-    ; sprite 7 : bullet 1
+    ; sprite 13 : balle joueur 1
 .oamBullet1:
     ld a, [wPBullet1Active]
     cp 0
     jr z, .hideBullet1
     ld a, [wPBullet1Y]
     add a, 16
-    ld [$FE1C], a
+    ld [OAM_PBUL1], a
     ld a, [wPBullet1X]
     add a, 8
-    ld [$FE1D], a
+    ld [OAM_PBUL1 + 1], a
     ld a, BULLET_TILE
-    ld [$FE1E], a
+    ld [OAM_PBUL1 + 2], a
     xor a
-    ld [$FE1F], a
+    ld [OAM_PBUL1 + 3], a
     jr .oamBullet2
 .hideBullet1:
     xor a
-    ld [$FE1C], a
+    ld [OAM_PBUL1], a
 
-    ; sprite 8 : bullet 2
+    ; sprite 14 : balle joueur 2
 .oamBullet2:
     ld a, [wPBullet2Active]
     cp 0
     jr z, .hideBullet2
     ld a, [wPBullet2Y]
     add a, 16
-    ld [$FE20], a
+    ld [OAM_PBUL2], a
     ld a, [wPBullet2X]
     add a, 8
-    ld [$FE21], a
+    ld [OAM_PBUL2 + 1], a
     ld a, BULLET_TILE
-    ld [$FE22], a
+    ld [OAM_PBUL2 + 2], a
     xor a
-    ld [$FE23], a
+    ld [OAM_PBUL2 + 3], a
     ret
 .hideBullet2:
     xor a
-    ld [$FE20], a
+    ld [OAM_PBUL2], a
     ret
 
 TouhouWinScreen:

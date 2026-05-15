@@ -1,4 +1,13 @@
 INCLUDE "hardware.inc"
+
+; Layout OAM (priorité max -> min, index bas = plus prioritaire)
+DEF OAM_BOSS     EQU $FE00  ; sprites  0-5  ($FE00-$FE17) : Sakuya
+DEF OAM_REIMU    EQU $FE18  ; sprites  6-11 ($FE18-$FE2F) : Reimu
+DEF OAM_PBUL0    EQU $FE30  ; sprite  12    ($FE30-$FE33) : balle joueur 0
+DEF OAM_PBUL1    EQU $FE34  ; sprite  13    ($FE34-$FE37) : balle joueur 1
+DEF OAM_PBUL2    EQU $FE38  ; sprite  14    ($FE38-$FE3B) : balle joueur 2
+DEF OAM_BOSS_BUL EQU $FE3C  ; sprites 15+   ($FE3C+)      : ennemis / balles boss
+
 SECTION "Touhou Game", ROM0
 
 TouhouInit:
@@ -83,32 +92,4 @@ wBossActive: db
 wBossHP: db
 wBossX: db
 wBossY: db
-wBossPhase: db
 wBossDX: db
-wBossShootTimer: db
-
-; boss qui tire des balles
-wBossBulX: ds 24
-wBossBulY: ds 24
-wBossBulActive: ds 24
-wBossBulDX: ds 24
-wBossBulDY: ds 24
-
-; submoids boss phase 2 
-wSub0X: db
-wSub0Y: db
-wSub0HP: db
-wSub0Active: db
-wSub0BulX: db
-wSub0BulY: db
-wSub0BulActive: db
-wSub0ShootTimer: db
-
-wSub1X: db
-wSub1Y: db
-wSub1HP: db
-wSub1Active: db
-wSub1BulX: db
-wSub1BulY: db
-wSub1BulActive: db
-wSub1ShootTimer: db
