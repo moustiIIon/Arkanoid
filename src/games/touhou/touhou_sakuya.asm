@@ -108,6 +108,20 @@ BossShoot:
     call SpawnBossBul
     jr .advanceSlot
 
+.phase2:
+    ; phase 2 : 1 verticale + 2 diagonales 45° depuis le centre du boss
+    ld a, [wBossX]
+    add a, BOSS_CENTER_OFF
+    ld c, 0 ; verticale
+    call SpawnBossBul
+    ld a, [wBossX]
+    add a, BOSS_CENTER_OFF
+    ld c, -BOSS_BUL_SPD & $FF ; diagonale gauche
+    call SpawnBossBul
+    ld a, [wBossX]
+    add a, BOSS_CENTER_OFF
+    ld c, BOSS_BUL_SPD ; diagonale droite
+    call SpawnBossBul
 
 .advanceSlot:
     ld a, e
@@ -166,6 +180,20 @@ UpdateBossBullets:
     add hl, de
     ld [hl], a
     cp SCREEN_H
+    jr nc, .deact
+    ; update X
+    ld hl, wBossBulX
+    add hl, de
+    ld a, [hl]
+    ld c, a
+    ld hl, wBossBulDX
+    add hl, de
+    ld a, [hl]
+    add a, c
+    ld hl, wBossBulX
+    add hl, de
+    ld [hl], a
+    cp SCREEN_H ; >=160 attrape sortie droite ET wrap gauche (>=200)
     jr nc, .deact
     jr .next
 .deact:
