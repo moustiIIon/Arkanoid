@@ -21,6 +21,7 @@ DEF BOSS_HIT_H EQU 25
 DEF BOSS_BUL_HIT EQU 9
 DEF SCREEN_H EQU 160
 
+ 
 BossInit:
     ld a, 1
     ld [wBossActive], a
@@ -36,6 +37,7 @@ BossInit:
     ld [wBossShootTimer], a
     xor a
     ld [wBossBulSlot], a
+    ld [wBossPhase], a
     ld hl, wBossBulActive
     ld b, BOSS_BUL_COUNT
 .clr:
@@ -44,16 +46,17 @@ BossInit:
     jr nz, .clr
     ret
 
+ 
 MoveBoss:
     ld a, [wBossX]
     ld c, a
     ld a, [wBossDX]
-    add a, c ; newX = X + DX (DX négatif = $FF en complément à 2)
-    cp WRAP_THRESHOLD ; sécurité underflow extrême
+    add a, c
+    cp WRAP_THRESHOLD
     jr nc, .bounceL
-    cp BOSS_X_MAX + 1 ; rebond mur droit
+    cp BOSS_X_MAX + 1
     jr nc, .bounceR
-    cp BOSS_X_MIN ; rebond mur gauche
+    cp BOSS_X_MIN
     jr c, .bounceL
     ld [wBossX], a
     ret
@@ -86,20 +89,27 @@ BossShoot:
     ld a, [wBossY]
     add a, BOSS_FIRE_Y_OFF
     ld b, a ; b = Y de spawn
-    ; colonne centre
+    ;init des phases
+    ld a, [wBossPhase]
+    cp 0
+    jr nz, .phase2
+
+    ; phase 1 : 3 colonnes verticales (DX=0)
+    ld c, 0
     ld a, [wBossX]
     add a, BOSS_CENTER_OFF
     call SpawnBossBul
-    ; colonne gauche
     ld a, [wBossX]
     add a, BOSS_CENTER_OFF
     sub BOSS_COL_OFF
     call SpawnBossBul
-    ; colonne droite
     ld a, [wBossX]
     add a, BOSS_CENTER_OFF + BOSS_COL_OFF
     call SpawnBossBul
-    ; avancer le slot (wrap à BOSS_BUL_COUNT)
+    jr .advanceSlot
+
+
+.advanceSlot:
     ld a, e
     cp BOSS_BUL_COUNT
     jr c, .saveSlot
@@ -108,7 +118,7 @@ BossShoot:
     ld [wBossBulSlot], a
     ret
 
-; SpawnBossBul : a=X, b=Y, de=slot (d=0) - sauvegarde X en premier, puis écrit Y/active/DY
+; SpawnBossBul : a=X, b=Y, c=DX, de=slot
 SpawnBossBul:
     ld hl, wBossBulX
     add hl, de
@@ -125,6 +135,10 @@ SpawnBossBul:
     add hl, de
     ld a, BOSS_BUL_SPD
     ld [hl], a
+    ld hl, wBossBulDX
+    add hl, de
+    ld a, c
+    ld [hl], a
     inc e
     ret
 
@@ -139,6 +153,7 @@ UpdateBossBullets:
     ld a, [hl]
     cp 0
     jr z, .next
+    ; update Y
     ld hl, wBossBulY
     add hl, de
     ld a, [hl]
@@ -209,13 +224,12 @@ CheckBossBulletsVsReimu:
 .chkY2:
     cp BOSS_BUL_HIT
     jr nc, .next
-    ; touché : désactiver la balle et blesser Reimu
     ld hl, wBossBulActive
     add hl, de
     xor a
     ld [hl], a
     call BossHitReimu
-    ret ; une seule touche par frame
+    ret
 .next:
     inc b
     ld a, b
@@ -308,6 +322,17 @@ CheckBulletVsBoss:
     dec a
     ld [wBossHP], a
     jr nz, .hit
+    ; HP = 0 : vérifier la phase
+    ld a, [wBossPhase]
+    cp 0
+    jr nz, .killBoss
+    ; transition phase 1 → phase 2
+    ld a, 1
+    ld [wBossPhase], a
+    ld a, BOSS_HP
+    ld [wBossHP], a
+    jr .hit
+.killBoss:
     ld a, TOUHOU_STATE_WIN
     ld [wTouhouState], a
 .hit:
@@ -315,6 +340,7 @@ CheckBulletVsBoss:
     ret
 .noHit:
     ret
+
 
 UpdateBoss:
     call MoveBoss

@@ -126,11 +126,13 @@ wBossY: db
 wBossDX: db
 wBossShootTimer: db
 wBossBulSlot: db
+wBossPhase: db
 
 wBossBulX: ds 12
 wBossBulY: ds 12
 wBossBulActive: ds 12
 wBossBulDY: ds 12
+wBossBulDX: ds 12
 
 wTouhouWinDrawn: db
 wTouhouOverDrawn: db
