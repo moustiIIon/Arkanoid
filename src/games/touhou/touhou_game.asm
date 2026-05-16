@@ -192,8 +192,13 @@ TouhouGameScreen:
     jp TouhouLoop
 
 ; TouhouRenderOAM : appelé en tout premier après VBlank
-; Écrit l'OAM avec les positions calculées la frame précédente
+; Déclenche le DMA (copie shadow → OAM réel en 160 cycles)
+; puis écrit les nouvelles positions dans le shadow pour la frame suivante
 TouhouRenderOAM:
+    ld a, HIGH(wShadowOAM)
+    ld [rDMA], a
+    call hDMAWait
+
     ; selon l'état : afficher ennemis OU Sakuya, jamais les deux
     ld a, [wTouhouState]
     cp TOUHOU_STATE_BOSS
@@ -203,73 +208,73 @@ TouhouRenderOAM:
     jr .renderReimu
 .renderBoss:
     call RenderBossOAM
-    call ClearEnemyOAM
+    call RenderBossBullets
 .renderReimu:
-    ; Reimu — sprites 6-11 à OAM_REIMU ($FE18), tiles 0-5
+    ; Reimu - sprites 6-11, tiles 0-5
     ld a, [wPlayerY]
     add a, 16
-    ld [OAM_REIMU], a
+    ld [wShadowOAM + OAM_REIMU], a
     ld a, [wPlayerX]
     add a, 8
-    ld [OAM_REIMU + 1], a
+    ld [wShadowOAM + OAM_REIMU + 1], a
     xor a
-    ld [OAM_REIMU + 2], a
-    ld [OAM_REIMU + 3], a
+    ld [wShadowOAM + OAM_REIMU + 2], a
+    ld [wShadowOAM + OAM_REIMU + 3], a
 
     ld a, [wPlayerY]
     add a, 16
-    ld [OAM_REIMU + 4], a
+    ld [wShadowOAM + OAM_REIMU + 4], a
     ld a, [wPlayerX]
     add a, 16
-    ld [OAM_REIMU + 5], a
+    ld [wShadowOAM + OAM_REIMU + 5], a
     ld a, 1
-    ld [OAM_REIMU + 6], a
+    ld [wShadowOAM + OAM_REIMU + 6], a
     xor a
-    ld [OAM_REIMU + 7], a
+    ld [wShadowOAM + OAM_REIMU + 7], a
 
     ld a, [wPlayerY]
     add a, 24
-    ld [OAM_REIMU + 8], a
+    ld [wShadowOAM + OAM_REIMU + 8], a
     ld a, [wPlayerX]
     add a, 8
-    ld [OAM_REIMU + 9], a
+    ld [wShadowOAM + OAM_REIMU + 9], a
     ld a, 2
-    ld [OAM_REIMU + 10], a
+    ld [wShadowOAM + OAM_REIMU + 10], a
     xor a
-    ld [OAM_REIMU + 11], a
+    ld [wShadowOAM + OAM_REIMU + 11], a
 
     ld a, [wPlayerY]
     add a, 24
-    ld [OAM_REIMU + 12], a
+    ld [wShadowOAM + OAM_REIMU + 12], a
     ld a, [wPlayerX]
     add a, 16
-    ld [OAM_REIMU + 13], a
+    ld [wShadowOAM + OAM_REIMU + 13], a
     ld a, 3
-    ld [OAM_REIMU + 14], a
+    ld [wShadowOAM + OAM_REIMU + 14], a
     xor a
-    ld [OAM_REIMU + 15], a
+    ld [wShadowOAM + OAM_REIMU + 15], a
 
     ld a, [wPlayerY]
     add a, 32
-    ld [OAM_REIMU + 16], a
+    ld [wShadowOAM + OAM_REIMU + 16], a
     ld a, [wPlayerX]
     add a, 8
-    ld [OAM_REIMU + 17], a
+    ld [wShadowOAM + OAM_REIMU + 17], a
     ld a, 4
-    ld [OAM_REIMU + 18], a
+    ld [wShadowOAM + OAM_REIMU + 18], a
     xor a
-    ld [OAM_REIMU + 19], a
+    ld [wShadowOAM + OAM_REIMU + 19], a
 
     ld a, [wPlayerY]
     add a, 32
-    ld [OAM_REIMU + 20], a
+    ld [wShadowOAM + OAM_REIMU + 20], a
     ld a, [wPlayerX]
     add a, 16
-    ld [OAM_REIMU + 21], a
+    ld [wShadowOAM + OAM_REIMU + 21], a
     ld a, 5
-    ld [OAM_REIMU + 22], a
+    ld [wShadowOAM + OAM_REIMU + 22], a
     xor a
-    ld [OAM_REIMU + 23], a
+    ld [wShadowOAM + OAM_REIMU + 23], a
 
     ; sprite 12 : balle joueur 0
     ld a, [wPBullet0Active]
@@ -277,18 +282,18 @@ TouhouRenderOAM:
     jr z, .hideBullet0
     ld a, [wPBullet0Y]
     add a, 16
-    ld [OAM_PBUL0], a
+    ld [wShadowOAM + OAM_PBUL0], a
     ld a, [wPBullet0X]
     add a, 8
-    ld [OAM_PBUL0 + 1], a
+    ld [wShadowOAM + OAM_PBUL0 + 1], a
     ld a, BULLET_TILE
-    ld [OAM_PBUL0 + 2], a
+    ld [wShadowOAM + OAM_PBUL0 + 2], a
     xor a
-    ld [OAM_PBUL0 + 3], a
+    ld [wShadowOAM + OAM_PBUL0 + 3], a
     jr .oamBullet1
 .hideBullet0:
     xor a
-    ld [OAM_PBUL0], a
+    ld [wShadowOAM + OAM_PBUL0], a
 
     ; sprite 13 : balle joueur 1
 .oamBullet1:
@@ -297,18 +302,18 @@ TouhouRenderOAM:
     jr z, .hideBullet1
     ld a, [wPBullet1Y]
     add a, 16
-    ld [OAM_PBUL1], a
+    ld [wShadowOAM + OAM_PBUL1], a
     ld a, [wPBullet1X]
     add a, 8
-    ld [OAM_PBUL1 + 1], a
+    ld [wShadowOAM + OAM_PBUL1 + 1], a
     ld a, BULLET_TILE
-    ld [OAM_PBUL1 + 2], a
+    ld [wShadowOAM + OAM_PBUL1 + 2], a
     xor a
-    ld [OAM_PBUL1 + 3], a
+    ld [wShadowOAM + OAM_PBUL1 + 3], a
     jr .oamBullet2
 .hideBullet1:
     xor a
-    ld [OAM_PBUL1], a
+    ld [wShadowOAM + OAM_PBUL1], a
 
     ; sprite 14 : balle joueur 2
 .oamBullet2:
@@ -317,18 +322,18 @@ TouhouRenderOAM:
     jr z, .hideBullet2
     ld a, [wPBullet2Y]
     add a, 16
-    ld [OAM_PBUL2], a
+    ld [wShadowOAM + OAM_PBUL2], a
     ld a, [wPBullet2X]
     add a, 8
-    ld [OAM_PBUL2 + 1], a
+    ld [wShadowOAM + OAM_PBUL2 + 1], a
     ld a, BULLET_TILE
-    ld [OAM_PBUL2 + 2], a
+    ld [wShadowOAM + OAM_PBUL2 + 2], a
     xor a
-    ld [OAM_PBUL2 + 3], a
+    ld [wShadowOAM + OAM_PBUL2 + 3], a
     ret
 .hideBullet2:
     xor a
-    ld [OAM_PBUL2], a
+    ld [wShadowOAM + OAM_PBUL2], a
     ret
 
 TouhouWinScreen:

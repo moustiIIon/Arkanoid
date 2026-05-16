@@ -1,17 +1,43 @@
 INCLUDE "hardware.inc"
 
-; Layout OAM (priorité max -> min, index bas = plus prioritaire)
-DEF OAM_BOSS     EQU $FE00  ; sprites  0-5  ($FE00-$FE17) : Sakuya
-DEF OAM_REIMU    EQU $FE18  ; sprites  6-11 ($FE18-$FE2F) : Reimu
-DEF OAM_PBUL0    EQU $FE30  ; sprite  12    ($FE30-$FE33) : balle joueur 0
-DEF OAM_PBUL1    EQU $FE34  ; sprite  13    ($FE34-$FE37) : balle joueur 1
-DEF OAM_PBUL2    EQU $FE38  ; sprite  14    ($FE38-$FE3B) : balle joueur 2
-DEF OAM_BOSS_BUL EQU $FE3C  ; sprites 15+   ($FE3C+)      : ennemis / balles boss
+DEF hDMAWait EQU $FF80  ; adresse HRAM de la routine d'attente DMA
+
+; Offsets dans le tampon OAM fantôme (base = wShadowOAM, aligné sur 256 octets)
+DEF OAM_BOSS     EQU $00   ; sprites  0-5  : Sakuya
+DEF OAM_REIMU    EQU $18   ; sprites  6-11 : Reimu
+DEF OAM_PBUL0    EQU $30   ; sprite  12    : balle joueur 0
+DEF OAM_PBUL1    EQU $34   ; sprite  13    : balle joueur 1
+DEF OAM_PBUL2    EQU $38   ; sprite  14    : balle joueur 2
+DEF OAM_BOSS_BUL EQU $3C   ; sprites 15+   : ennemis / balles boss
 
 SECTION "Touhou Game", ROM0
 
+; Routine copiée en HRAM - CPU limité à HRAM pendant le DMA (~160 cycles)
+DMAWaitRoutine:
+    ld a, 40
+.loop:
+    dec a
+    jr nz, .loop
+    ret
+DMAWaitRoutine_End:
+
 TouhouInit:
     call CommonInit
+
+    ; copier la routine d'attente DMA en HRAM
+    ld de, DMAWaitRoutine
+    ld hl, hDMAWait
+    ld bc, DMAWaitRoutine_End - DMAWaitRoutine
+    call MemCpy
+
+    ; initialiser le tampon OAM fantôme à zéro
+    ld hl, wShadowOAM
+    ld b, 160
+    xor a
+.clearShadow:
+    ld [hli], a
+    dec b
+    jr nz, .clearShadow
 
     ld de, Touhou_Sprite_Begin
     ld hl, $8000
@@ -69,6 +95,9 @@ TouhouLoop:
     jp z, TouhouGameOver
     jp TouhouLoop
 
+SECTION "Shadow OAM", WRAM0, ALIGN[8]
+wShadowOAM: ds 160
+
 SECTION "Touhou Vars", WRAM0
 wTouhouState: db
 wTouhouFrame: db
@@ -93,3 +122,10 @@ wBossHP: db
 wBossX: db
 wBossY: db
 wBossDX: db
+wBossShootTimer: db
+wBossBulSlot: db
+
+wBossBulX: ds 12
+wBossBulY: ds 12
+wBossBulActive: ds 12
+wBossBulDY: ds 12

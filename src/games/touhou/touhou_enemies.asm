@@ -163,7 +163,7 @@ UpdateEnemyBullets:
 ; RenderEnemyOAM : écrit ennemis + leurs bullets dans l'OAM à partir de OAM_BOSS_BUL ($FE3C)
 RenderEnemyOAM:
     ld b, 0
-    ld hl, OAM_BOSS_BUL
+    ld hl, wShadowOAM + OAM_BOSS_BUL
 .loop:
     ld a, b
     ld e, a

@@ -117,7 +117,7 @@ src/
       reaction_sprites.asm  tiles OBJ (A, B, ↑, ↓, ←, →)
 ```
 
-### Machine à états — Reaction
+### Machine à états - Reaction
 
 ```
 ReactTitleScreen

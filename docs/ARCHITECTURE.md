@@ -79,7 +79,7 @@ reste = unités
 
 Ces modules sont partagés par tous les jeux.
 
-### Input — [src/core/input.asm](src/core/input.asm)
+### Input - [src/core/input.asm](src/core/input.asm)
 
 Le joypad Game Boy utilise le registre `rJOYP` en mode multiplexé. Pour lire les 8 touches, il faut faire deux lectures séparées :
 
@@ -107,7 +107,7 @@ Séquence UpdateKeys :
 
 Les jeux testent `wNewKeys` pour les actions one-shot (START, A, changement d'état) et `wCurKeys` pour les mouvements continus (déplacement joueur).
 
-### Synchronisation verticale — [src/core/my_waitvblank.asm](src/core/my_waitvblank.asm)
+### Synchronisation verticale - [src/core/my_waitvblank.asm](src/core/my_waitvblank.asm)
 
 ```
 MyWaitVBlank:
@@ -120,7 +120,7 @@ Appelé en début de chaque frame. Le PPU (Picture Processing Unit) n'accède pa
 
 Le VBlank dure environ 1,1 ms sur 16,7 ms de frame totale (60 Hz), soit ~6,5% du temps disponible.
 
-### MemCpy — [src/core/memcpy.asm](src/core/memcpy.asm)
+### MemCpy - [src/core/memcpy.asm](src/core/memcpy.asm)
 
 ```
 MemCpy(DE = adresse source, HL = adresse destination, BC = nombre d'octets)
@@ -129,7 +129,7 @@ MemCpy(DE = adresse source, HL = adresse destination, BC = nombre d'octets)
 
 Utilisé pour charger toutes les tuiles graphiques (tilesets), tilemaps et sprites en VRAM. Appelé plusieurs fois lors des initialisations de jeu.
 
-### Initialisation commune — [src/core/init.asm](src/core/init.asm)
+### Initialisation commune - [src/core/init.asm](src/core/init.asm)
 
 `CommonInit` fournit une ardoise vierge avant chaque jeu :
 
@@ -143,7 +143,7 @@ CommonInit:
 
 Le tileset commun contient les tuiles partagées (chiffres, lettres, murs) utilisées par tous les jeux.
 
-### Gestion SRAM — [src/core/sram.asm](src/core/sram.asm)
+### Gestion SRAM - [src/core/sram.asm](src/core/sram.asm)
 
 La SRAM est une RAM externe sur la cartouche, alimentée par batterie. L'accès nécessite un déverrouillage via le MBC5 (Memory Bank Controller) :
 
@@ -194,7 +194,7 @@ DisableSRAM
 
 `SaveReactScoreToSram` est identique mais lit `wRoundCount` et écrit dans `$A004–$A006`.
 
-### Collision par tilemap — [src/core/tile_lookup.asm](src/core/tile_lookup.asm)
+### Collision par tilemap - [src/core/tile_lookup.asm](src/core/tile_lookup.asm)
 
 ```
 GetTileByPixel(b = Y_pixels, c = X_pixels) → HL = adresse tilemap
@@ -210,7 +210,7 @@ Calcul :
 
 Ce mécanisme transforme le problème de collision pixel-par-pixel en une simple lecture mémoire : si la tuile à cette adresse est dans la liste des tuiles solides, il y a collision.
 
-### Transition d'écran — [src/core/transition.asm](src/core/transition.asm)
+### Transition d'écran - [src/core/transition.asm](src/core/transition.asm)
 
 ```
 TransitionScreenToBlack (8 frames par étape) :
@@ -250,7 +250,7 @@ GameInit:
 
 ---
 
-## 5. Brick Breaker — [src/games/brick/](src/games/brick/)
+## 5. Brick Breaker - [src/games/brick/](src/games/brick/)
 
 ### Constantes et variables clés
 
@@ -351,13 +351,13 @@ UpdateScoreDisplay :
 ### OAM Brick
 
 ```
-Sprite 0 (OAM $FE00) : Raquette — tuile paddle 8×8
-Sprite 1 (OAM $FE04) : Balle    — tuile ball   8×8
+Sprite 0 (OAM $FE00) : Raquette - tuile paddle 8×8
+Sprite 1 (OAM $FE04) : Balle    - tuile ball   8×8
 ```
 
 ---
 
-## 6. Reaction — [src/games/reaction/](src/games/reaction/)
+## 6. Reaction - [src/games/reaction/](src/games/reaction/)
 
 ### Machine à états (`wReactionState`)
 
@@ -432,7 +432,7 @@ Sprite 0 positionné au centre : REACT_SPRITE_Y = 84, REACT_SPRITE_X = 84
 
 ---
 
-## 7. Touhou — [src/games/touhou/](src/games/touhou/)
+## 7. Touhou - [src/games/touhou/](src/games/touhou/)
 
 ### Constantes et variables clés
 
@@ -444,10 +444,10 @@ Sprite 0 positionné au centre : REACT_SPRITE_Y = 84, REACT_SPRITE_X = 84
 | `BULLET_SPEED` | 4 | Pixels/frame (montée) |
 | `BULLET_FRAMES` | 10 | Cooldown entre tirs |
 | `BULLET_TILE` | 6 | ID de tuile projectile |
-| `wPlayerX/Y` | — | Position joueur |
+| `wPlayerX/Y` | - | Position joueur |
 | `wFireCooldown` | 0–10 | Frames avant prochain tir |
 | `wFireSlot` | 0–2 | Index round-robin actif |
-| `wPBullet0/1/2 X/Y/Active` | — | État des 3 slots |
+| `wPBullet0/1/2 X/Y/Active` | - | État des 3 slots |
 
 ### OAM Touhou (9 sprites)
 
@@ -535,22 +535,22 @@ $0000–$7FFF   ROM Flash (32 KB) ── code + données graphiques en flash
     $0100–$014F   Header cartouche (titre, type MBC, checksum)
     $0150+        Code programme (main.asm, jeux, core)
 
-$8000–$97FF   VRAM — données tuiles (256 tuiles × 16 octets)
+$8000–$97FF   VRAM - données tuiles (256 tuiles × 16 octets)
     $8000–$8FFF   Tuiles OBJ (sprites)
     $9000–$97FF   Tuiles BG + tileset commun
 
-$9800–$9FFF   VRAM — tilemaps
+$9800–$9FFF   VRAM - tilemaps
     $9800–$9BFF   Tilemap fond BG  (32×32 tuiles = 1024 octets)
     $9C00–$9FFF   Tilemap Window   (32×32 tuiles, utilisée par Reaction)
 
-$A000–$BFFF   SRAM externe (8 KB) — sauvegarde via batterie
+$A000–$BFFF   SRAM externe (8 KB) - sauvegarde via batterie
     $A000         Magic byte ($43)
     $A001–$A003   Top 3 Brick (BCD)
     $A004–$A006   Top 3 Reaction (binaire)
 
-$C000–$DFFF   WRAM (8 KB) — variables programme
-$FE00–$FE9F   OAM (160 octets) — 40 sprites × 4 octets
-$FF80–$FFFE   HRAM (127 octets) — stack et variables rapides
+$C000–$DFFF   WRAM (8 KB) - variables programme
+$FE00–$FE9F   OAM (160 octets) - 40 sprites × 4 octets
+$FF80–$FFFE   HRAM (127 octets) - stack et variables rapides
 ```
 
 **Structure d'un sprite OAM (4 octets) :**
@@ -569,7 +569,7 @@ Octet 3 : Attributs
 
 ## 10. Patterns récurrents dans le code
 
-### RNG via rDIV — sans PRNG logiciel
+### RNG via rDIV - sans PRNG logiciel
 
 `rDIV` est un registre hardware qui s'incrémente en continu (toutes les 256 cycles CPU, environ 16 384 Hz). Sa valeur dépend entièrement du timing humain depuis le boot. En lisant `[rDIV] & $07`, on obtient un octet pseudo-aléatoire sans implémenter de PRNG.
 
@@ -579,7 +579,7 @@ Reaction utilise une **rejection sampling** : si la valeur est 6 ou 7, on re-lit
 
 Brick stocke son score en BCD (Binary-Coded Decimal) : le nibble haut représente les dizaines, le nibble bas les unités. Après chaque `add a, 1`, l'instruction `daa` corrige automatiquement le résultat pour rester valide en BCD (par exemple, `$09 + 1 = $10` au lieu de `$0A`).
 
-Avantage : l'affichage ne nécessite aucune conversion — les nibbles sont directement utilisables comme index dans la table de tuiles de chiffres.
+Avantage : l'affichage ne nécessite aucune conversion - les nibbles sont directement utilisables comme index dans la table de tuiles de chiffres.
 
 ### Multiplicateur de vitesse par comptage de pas
 
