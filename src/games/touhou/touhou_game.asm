@@ -337,19 +337,49 @@ TouhouRenderOAM:
     ret
 
 TouhouWinScreen:
+    ld a, [wTouhouWinDrawn]
+    cp 0
+    jr nz, .skipDraw
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+    ld hl, REACT_WIN_ADDR
+    ld a, TILE_W
+    ld [hli], a
+    ld a, TILE_I
+    ld [hli], a
+    ld a, TILE_N
+    ld [hl], a
+    ld a, 1
+    ld [wTouhouWinDrawn], a
+.skipDraw:
     ld a, [wNewKeys]
     and PAD_START
     jp z, TouhouLoop
-    call TransitionScreenToBlack
     xor a
     ld [rLCDC], a
     jp GlobalMenuInit
 
 TouhouGameOver:
+    ld a, [wTouhouOverDrawn]
+    cp 0
+    jr nz, .skipDraw
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+    ld hl, REACT_FAIL_ADDR
+    ld a, TILE_F
+    ld [hli], a
+    ld a, TILE_A
+    ld [hli], a
+    ld a, TILE_I
+    ld [hli], a
+    ld a, TILE_L
+    ld [hl], a
+    ld a, 1
+    ld [wTouhouOverDrawn], a
+.skipDraw:
     ld a, [wNewKeys]
     and PAD_START
     jp z, TouhouLoop
-    call TransitionScreenToBlack
     xor a
     ld [rLCDC], a
     jp GlobalMenuInit

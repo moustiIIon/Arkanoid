@@ -1,27 +1,25 @@
 SECTION "Touhou Sakuya Boss", ROM0
 
-DEF BOSS_HP          EQU 30
-DEF BOSS_SPEED       EQU 1
-DEF BOSS_SHOOT_RATE  EQU 30
-DEF BOSS_BUL_SPD     EQU 2
-DEF BOSS_BUL_COUNT   EQU 12
+DEF BOSS_HP EQU 30
+DEF BOSS_SPEED EQU 1
+DEF BOSS_SHOOT_RATE EQU 30
+DEF BOSS_BUL_SPD EQU 1
+DEF BOSS_BUL_COUNT EQU 12
 
-DEF BOSS_INIT_X      EQU 72
-DEF BOSS_INIT_Y      EQU 16
-DEF BOSS_X_MIN       EQU 8
-DEF BOSS_X_MAX       EQU 136
-DEF WRAP_THRESHOLD   EQU 200
+DEF BOSS_INIT_X EQU 72
+DEF BOSS_INIT_Y EQU 16
+DEF BOSS_X_MIN EQU 8
+DEF BOSS_X_MAX EQU 136
+DEF WRAP_THRESHOLD EQU 200
 
-DEF BOSS_FIRE_Y_OFF  EQU 24
-DEF BOSS_CENTER_OFF  EQU 8
-DEF BOSS_COL_OFF     EQU 12
+DEF BOSS_FIRE_Y_OFF EQU 24
+DEF BOSS_CENTER_OFF EQU 8
+DEF BOSS_COL_OFF EQU 12
 
-DEF BOSS_HIT_W       EQU 17
-DEF BOSS_HIT_H       EQU 25
-DEF BOSS_BUL_HIT     EQU 9
-DEF SCREEN_H         EQU 160
-
-; ---------- init ----------
+DEF BOSS_HIT_W EQU 17
+DEF BOSS_HIT_H EQU 25
+DEF BOSS_BUL_HIT EQU 9
+DEF SCREEN_H EQU 160
 
 BossInit:
     ld a, 1
@@ -46,18 +44,16 @@ BossInit:
     jr nz, .clr
     ret
 
-; ---------- mouvement ----------
-
 MoveBoss:
     ld a, [wBossX]
     ld c, a
     ld a, [wBossDX]
-    add a, c           ; newX = X + DX (DX négatif = $FF en complément à 2)
-    cp WRAP_THRESHOLD  ; sécurité underflow extrême
+    add a, c ; newX = X + DX (DX négatif = $FF en complément à 2)
+    cp WRAP_THRESHOLD ; sécurité underflow extrême
     jr nc, .bounceL
-    cp BOSS_X_MAX + 1  ; rebond mur droit
+    cp BOSS_X_MAX + 1 ; rebond mur droit
     jr nc, .bounceR
-    cp BOSS_X_MIN      ; rebond mur gauche
+    cp BOSS_X_MIN ; rebond mur gauche
     jr c, .bounceL
     ld [wBossX], a
     ret
@@ -74,8 +70,6 @@ MoveBoss:
     ld [wBossDX], a
     ret
 
-; ---------- tir ----------
-
 BossShoot:
     ld a, [wBossShootTimer]
     cp 0
@@ -91,7 +85,7 @@ BossShoot:
     ld d, 0
     ld a, [wBossY]
     add a, BOSS_FIRE_Y_OFF
-    ld b, a            ; b = Y de spawn
+    ld b, a ; b = Y de spawn
     ; colonne centre
     ld a, [wBossX]
     add a, BOSS_CENTER_OFF
@@ -134,8 +128,6 @@ SpawnBossBul:
     inc e
     ret
 
-; ---------- mise à jour des balles ----------
-
 UpdateBossBullets:
     ld b, 0
 .loop:
@@ -172,8 +164,6 @@ UpdateBossBullets:
     cp BOSS_BUL_COUNT
     jr nz, .loop
     ret
-
-; ---------- collision : balles boss vs Reimu ----------
 
 CheckBossBulletsVsReimu:
     ld a, [wInvincTimer]
@@ -225,7 +215,7 @@ CheckBossBulletsVsReimu:
     xor a
     ld [hl], a
     call BossHitReimu
-    ret                ; une seule touche par frame
+    ret ; une seule touche par frame
 .next:
     inc b
     ld a, b
@@ -246,8 +236,6 @@ BossHitReimu:
     ld a, TOUHOU_STATE_OVER
     ld [wTouhouState], a
     ret
-
-; ---------- collision : balles joueur vs Sakuya ----------
 
 CheckPlayerBulletsVsBoss:
     ld a, [wPBullet0Active]
@@ -327,8 +315,6 @@ CheckBulletVsBoss:
     ret
 .noHit:
     ret
-
-; ---------- update principal ----------
 
 UpdateBoss:
     call MoveBoss

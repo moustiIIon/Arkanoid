@@ -3,12 +3,12 @@ INCLUDE "hardware.inc"
 DEF hDMAWait EQU $FF80  ; adresse HRAM de la routine d'attente DMA
 
 ; Offsets dans le tampon OAM fantôme (base = wShadowOAM, aligné sur 256 octets)
-DEF OAM_BOSS     EQU $00   ; sprites  0-5  : Sakuya
-DEF OAM_REIMU    EQU $18   ; sprites  6-11 : Reimu
-DEF OAM_PBUL0    EQU $30   ; sprite  12    : balle joueur 0
-DEF OAM_PBUL1    EQU $34   ; sprite  13    : balle joueur 1
-DEF OAM_PBUL2    EQU $38   ; sprite  14    : balle joueur 2
-DEF OAM_BOSS_BUL EQU $3C   ; sprites 15+   : ennemis / balles boss
+DEF OAM_BOSS EQU $00 ; sprites 0-5 : Sakuya
+DEF OAM_REIMU EQU $18 ; sprites 6-11 : Reimu
+DEF OAM_PBUL0 EQU $30 ; sprite 12 : balle joueur 0
+DEF OAM_PBUL1 EQU $34 ; sprite 13 : balle joueur 1
+DEF OAM_PBUL2 EQU $38 ; sprite 14 : balle joueur 2
+DEF OAM_BOSS_BUL EQU $3C ; sprites 15+ : ennemis / balles boss
 
 SECTION "Touhou Game", ROM0
 
@@ -63,6 +63,8 @@ TouhouInit:
     ld [wWaveIndex], a
     ld [wBossActive], a
     ld [wBossHP], a
+    ld [wTouhouWinDrawn], a
+    ld [wTouhouOverDrawn], a
     ld a, 5
     ld [wPlayerLives], a
 
@@ -129,3 +131,6 @@ wBossBulX: ds 12
 wBossBulY: ds 12
 wBossBulActive: ds 12
 wBossBulDY: ds 12
+
+wTouhouWinDrawn: db
+wTouhouOverDrawn: db
