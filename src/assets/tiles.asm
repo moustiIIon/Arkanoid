@@ -367,7 +367,7 @@ Shared_Tileset_Begin:
     dw `00000000
 
 
-; Tile $1E : Border dim — petit point central
+; Tile $1E : Border dim - petit point central
     dw `00000000
     dw `00000000
     dw `00000000
@@ -377,7 +377,7 @@ Shared_Tileset_Begin:
     dw `00000000
     dw `00000000
 
-; Tile $1F : Border highlight — carré plein
+; Tile $1F : Border highlight - carré plein
     dw `00000000
     dw `03333330
     dw `03333330

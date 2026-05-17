@@ -5,11 +5,35 @@ DEF PLAYER_X_MIN EQU 0
 DEF PLAYER_X_MAX EQU 144
 DEF PLAYER_Y_MIN EQU 0
 DEF PLAYER_Y_MAX EQU 120
-DEF BULLET_SPEED EQU 4
-DEF BULLET_FRAMES EQU 10
+DEF BULLET_SPEED EQU 7
+DEF BULLET_FRAMES EQU 5
 DEF BULLET_TILE EQU 6
+DEF PLAYER_BUL_X_OFF EQU 4
 
 TouhouGameScreen:
+    ; décrémenter invincibilité
+    ld a, [wInvincTimer]
+    cp 0
+    jr z, .skipInvinc
+    dec a
+    ld [wInvincTimer], a
+.skipInvinc:
+    ; logique de vague ou boss selon état
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_WAVE
+    jr nz, .skipWave
+    call UpdateWave
+    ; si UpdateWave vient de déclencher le boss, attendre le prochain VBlank
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_BOSS
+    jp z, TouhouLoop
+.skipWave:
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_BOSS
+    jr nz, .skipBoss
+    call UpdateBoss
+.skipBoss:
+
     ld a, [wCurKeys]
     and PAD_LEFT
     jr z, .checkRight
@@ -83,7 +107,7 @@ TouhouGameScreen:
 
     ; round-robin : ecrire dans le slot courant et avancer
     ld a, [wPlayerX]
-    add a, 4
+    add a, PLAYER_BUL_X_OFF
     ld b, a
     ld a, [wPlayerY]
     ld c, a
@@ -166,138 +190,199 @@ TouhouGameScreen:
     ld [wPBullet2Active], a
 
 .updateOAM:
-    ; sprites 0-5 : Reimu (16x24, 6 entrees 8x8)
+    jp TouhouLoop
+
+; TouhouRenderOAM : appelé en tout premier après VBlank
+; Déclenche le DMA (copie shadow → OAM réel en 160 cycles)
+; puis écrit les nouvelles positions dans le shadow pour la frame suivante
+TouhouRenderOAM:
+    ld a, HIGH(wShadowOAM)
+    ld [rDMA], a
+    call hDMAWait
+
+    ; selon l'état : afficher ennemis OU Sakuya, jamais les deux
+    ld a, [wTouhouState]
+    cp TOUHOU_STATE_BOSS
+    jr z, .renderBoss
+    call RenderEnemyOAM
+    call ClearBossOAM
+    jr .renderReimu
+.renderBoss:
+    call RenderBossOAM
+    call RenderBossBullets
+    call RenderSubEnemies
+    call RenderSubEnemyBullets
+.renderReimu:
+    ; Reimu - sprites 6-11, tiles 0-5
     ld a, [wPlayerY]
-    add a, 16
-    ld [$FE00], a
+    add a, OAM_Y_BIAS
+    ld [wShadowOAM + OAM_REIMU], a
     ld a, [wPlayerX]
-    add a, 8
-    ld [$FE01], a
+    add a, OAM_X_BIAS
+    ld [wShadowOAM + OAM_REIMU + 1], a
     xor a
-    ld [$FE02], a
-    ld [$FE03], a
+    ld [wShadowOAM + OAM_REIMU + 2], a
+    ld [wShadowOAM + OAM_REIMU + 3], a
 
     ld a, [wPlayerY]
-    add a, 16
-    ld [$FE04], a
+    add a, OAM_Y_BIAS
+    ld [wShadowOAM + OAM_REIMU + 4], a
     ld a, [wPlayerX]
-    add a, 16
-    ld [$FE05], a
+    add a, OAM_X_BIAS + SPRITE_ROW_H
+    ld [wShadowOAM + OAM_REIMU + 5], a
     ld a, 1
-    ld [$FE06], a
+    ld [wShadowOAM + OAM_REIMU + 6], a
     xor a
-    ld [$FE07], a
+    ld [wShadowOAM + OAM_REIMU + 7], a
 
     ld a, [wPlayerY]
-    add a, 24
-    ld [$FE08], a
+    add a, OAM_Y_BIAS + SPRITE_ROW_H
+    ld [wShadowOAM + OAM_REIMU + 8], a
     ld a, [wPlayerX]
-    add a, 8
-    ld [$FE09], a
+    add a, OAM_X_BIAS
+    ld [wShadowOAM + OAM_REIMU + 9], a
     ld a, 2
-    ld [$FE0A], a
+    ld [wShadowOAM + OAM_REIMU + 10], a
     xor a
-    ld [$FE0B], a
+    ld [wShadowOAM + OAM_REIMU + 11], a
 
     ld a, [wPlayerY]
-    add a, 24
-    ld [$FE0C], a
+    add a, OAM_Y_BIAS + SPRITE_ROW_H
+    ld [wShadowOAM + OAM_REIMU + 12], a
     ld a, [wPlayerX]
-    add a, 16
-    ld [$FE0D], a
+    add a, OAM_X_BIAS + SPRITE_ROW_H
+    ld [wShadowOAM + OAM_REIMU + 13], a
     ld a, 3
-    ld [$FE0E], a
+    ld [wShadowOAM + OAM_REIMU + 14], a
     xor a
-    ld [$FE0F], a
+    ld [wShadowOAM + OAM_REIMU + 15], a
 
     ld a, [wPlayerY]
-    add a, 32
-    ld [$FE10], a
+    add a, OAM_Y_BIAS + SPRITE_ROW_H * 2
+    ld [wShadowOAM + OAM_REIMU + 16], a
     ld a, [wPlayerX]
-    add a, 8
-    ld [$FE11], a
+    add a, OAM_X_BIAS
+    ld [wShadowOAM + OAM_REIMU + 17], a
     ld a, 4
-    ld [$FE12], a
+    ld [wShadowOAM + OAM_REIMU + 18], a
     xor a
-    ld [$FE13], a
+    ld [wShadowOAM + OAM_REIMU + 19], a
 
     ld a, [wPlayerY]
-    add a, 32
-    ld [$FE14], a
+    add a, OAM_Y_BIAS + SPRITE_ROW_H * 2
+    ld [wShadowOAM + OAM_REIMU + 20], a
     ld a, [wPlayerX]
-    add a, 16
-    ld [$FE15], a
+    add a, OAM_X_BIAS + SPRITE_ROW_H
+    ld [wShadowOAM + OAM_REIMU + 21], a
     ld a, 5
-    ld [$FE16], a
+    ld [wShadowOAM + OAM_REIMU + 22], a
     xor a
-    ld [$FE17], a
+    ld [wShadowOAM + OAM_REIMU + 23], a
 
-    ; sprite 6 : bullet 0
+    ; sprite 12 : balle joueur 0
     ld a, [wPBullet0Active]
     cp 0
     jr z, .hideBullet0
     ld a, [wPBullet0Y]
-    add a, 16
-    ld [$FE18], a
+    add a, OAM_Y_BIAS
+    ld [wShadowOAM + OAM_PBUL0], a
     ld a, [wPBullet0X]
-    add a, 8
-    ld [$FE19], a
+    add a, OAM_X_BIAS
+    ld [wShadowOAM + OAM_PBUL0 + 1], a
     ld a, BULLET_TILE
-    ld [$FE1A], a
+    ld [wShadowOAM + OAM_PBUL0 + 2], a
     xor a
-    ld [$FE1B], a
+    ld [wShadowOAM + OAM_PBUL0 + 3], a
     jr .oamBullet1
 .hideBullet0:
     xor a
-    ld [$FE18], a
+    ld [wShadowOAM + OAM_PBUL0], a
 
-    ; sprite 7 : bullet 1
+    ; sprite 13 : balle joueur 1
 .oamBullet1:
     ld a, [wPBullet1Active]
     cp 0
     jr z, .hideBullet1
     ld a, [wPBullet1Y]
-    add a, 16
-    ld [$FE1C], a
+    add a, OAM_Y_BIAS
+    ld [wShadowOAM + OAM_PBUL1], a
     ld a, [wPBullet1X]
-    add a, 8
-    ld [$FE1D], a
+    add a, OAM_X_BIAS
+    ld [wShadowOAM + OAM_PBUL1 + 1], a
     ld a, BULLET_TILE
-    ld [$FE1E], a
+    ld [wShadowOAM + OAM_PBUL1 + 2], a
     xor a
-    ld [$FE1F], a
+    ld [wShadowOAM + OAM_PBUL1 + 3], a
     jr .oamBullet2
 .hideBullet1:
     xor a
-    ld [$FE1C], a
+    ld [wShadowOAM + OAM_PBUL1], a
 
-    ; sprite 8 : bullet 2
+    ; sprite 14 : balle joueur 2
 .oamBullet2:
     ld a, [wPBullet2Active]
     cp 0
     jr z, .hideBullet2
     ld a, [wPBullet2Y]
-    add a, 16
-    ld [$FE20], a
+    add a, OAM_Y_BIAS
+    ld [wShadowOAM + OAM_PBUL2], a
     ld a, [wPBullet2X]
-    add a, 8
-    ld [$FE21], a
+    add a, OAM_X_BIAS
+    ld [wShadowOAM + OAM_PBUL2 + 1], a
     ld a, BULLET_TILE
-    ld [$FE22], a
+    ld [wShadowOAM + OAM_PBUL2 + 2], a
     xor a
-    ld [$FE23], a
-    jp TouhouLoop
+    ld [wShadowOAM + OAM_PBUL2 + 3], a
+    ret
 .hideBullet2:
     xor a
-    ld [$FE20], a
+    ld [wShadowOAM + OAM_PBUL2], a
+    ret
 
-    jp TouhouLoop
-
-TouhouGameOver:
+TouhouWinScreen:
+    ld a, [wTouhouWinDrawn]
+    cp 0
+    jr nz, .skipDraw
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+    ld hl, REACT_WIN_ADDR
+    ld a, TILE_W
+    ld [hli], a
+    ld a, TILE_I
+    ld [hli], a
+    ld a, TILE_N
+    ld [hl], a
+    ld a, 1
+    ld [wTouhouWinDrawn], a
+.skipDraw:
     ld a, [wNewKeys]
     and PAD_START
     jp z, TouhouLoop
-    call TransitionScreenToBlack
+    xor a
+    ld [rLCDC], a
+    jp GlobalMenuInit
+
+TouhouGameOver:
+    ld a, [wTouhouOverDrawn]
+    cp 0
+    jr nz, .skipDraw
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+    ld hl, REACT_FAIL_ADDR
+    ld a, TILE_F
+    ld [hli], a
+    ld a, TILE_A
+    ld [hli], a
+    ld a, TILE_I
+    ld [hli], a
+    ld a, TILE_L
+    ld [hl], a
+    ld a, 1
+    ld [wTouhouOverDrawn], a
+.skipDraw:
+    ld a, [wNewKeys]
+    and PAD_START
+    jp z, TouhouLoop
     xor a
     ld [rLCDC], a
     jp GlobalMenuInit

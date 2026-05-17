@@ -50,8 +50,13 @@ INCLUDE "src/games/reaction/reaction_game.asm"
 INCLUDE "src/games/reaction/reaction_sprites.asm"
 
 INCLUDE "src/games/touhou/touhou.asm"
+INCLUDE "src/games/touhou/touhou_wave.asm"
+INCLUDE "src/games/touhou/touhou_enemies.asm"
+INCLUDE "src/games/touhou/touhou_collision.asm"
 INCLUDE "src/games/touhou/touhou_game.asm"
 INCLUDE "src/games/touhou/touhou_sprites.asm"
+INCLUDE "src/games/touhou/touhou_sakuya.asm"
+INCLUDE "src/games/touhou/touhou_sakuya_render.asm"
 
 INCLUDE "src/games/menu/menu.asm"
 INCLUDE "src/games/menu/menu_map.asm"

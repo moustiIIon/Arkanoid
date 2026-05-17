@@ -76,7 +76,7 @@ Les 8 bits bas de la fréquence (11 bits au total).
 
 ### NR14, Fréquence haute + Trigger (`$FF14`)
 ```
-Bit  7   : TRIGGER — déclenche le son (écrire 1 pour jouer)
+Bit  7   : TRIGGER - déclenche le son (écrire 1 pour jouer)
 Bit  6   : utiliser la durée de NR11 (1) ou jouer indéfiniment (0)
 Bits 2-0 : les 3 bits hauts de la fréquence
 ```
@@ -126,9 +126,9 @@ Un son avec envelope descendante s'éteint tout seul, pas besoin de le couper ma
 
 ---
 
-## Le Canal 4 — Bruit blanc
+## Le Canal 4 - Bruit blanc
 
-Utile pour les percussions et explosions. Pas de fréquence musicale — il génère du bruit aléatoire
+Utile pour les percussions et explosions. Pas de fréquence musicale - il génère du bruit aléatoire
 
 ```gbz80
 ld a, $FF

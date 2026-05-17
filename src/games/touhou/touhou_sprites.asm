@@ -7,7 +7,7 @@ Touhou_Sprite_Begin:
 
     INCBIN "src/assets/reimu.chr", 0, 96
 
-; Tile 6 : Bullet (8x8, une seule tile)
+; Tile 6 : Bullet joueur (8x8)
     dw `00033000
     dw `00311300
     dw `03011030
@@ -16,5 +16,13 @@ Touhou_Sprite_Begin:
     dw `00033000
     dw `00000000
     dw `00000000
+
+; Tile 7 : Ennemi (8x8)
+    INCBIN "src/assets/enemies.chr", 0, 16
+
+; Tile 8 : Bullet ennemi (8x8)
+    INCBIN "src/assets/enemies_bullet.chr", 0, 16
+
+    INCBIN "src/assets/sakuya.chr", 0, 96
 
 Touhou_Sprite_End:
