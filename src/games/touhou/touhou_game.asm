@@ -8,6 +8,7 @@ DEF PLAYER_Y_MAX EQU 120
 DEF BULLET_SPEED EQU 7
 DEF BULLET_FRAMES EQU 5
 DEF BULLET_TILE EQU 6
+DEF PLAYER_BUL_X_OFF EQU 4
 
 TouhouGameScreen:
     ; décrémenter invincibilité
@@ -106,7 +107,7 @@ TouhouGameScreen:
 
     ; round-robin : ecrire dans le slot courant et avancer
     ld a, [wPlayerX]
-    add a, 4
+    add a, PLAYER_BUL_X_OFF
     ld b, a
     ld a, [wPlayerY]
     ld c, a
@@ -209,23 +210,25 @@ TouhouRenderOAM:
 .renderBoss:
     call RenderBossOAM
     call RenderBossBullets
+    call RenderSubEnemies
+    call RenderSubEnemyBullets
 .renderReimu:
     ; Reimu - sprites 6-11, tiles 0-5
     ld a, [wPlayerY]
-    add a, 16
+    add a, OAM_Y_BIAS
     ld [wShadowOAM + OAM_REIMU], a
     ld a, [wPlayerX]
-    add a, 8
+    add a, OAM_X_BIAS
     ld [wShadowOAM + OAM_REIMU + 1], a
     xor a
     ld [wShadowOAM + OAM_REIMU + 2], a
     ld [wShadowOAM + OAM_REIMU + 3], a
 
     ld a, [wPlayerY]
-    add a, 16
+    add a, OAM_Y_BIAS
     ld [wShadowOAM + OAM_REIMU + 4], a
     ld a, [wPlayerX]
-    add a, 16
+    add a, OAM_X_BIAS + SPRITE_ROW_H
     ld [wShadowOAM + OAM_REIMU + 5], a
     ld a, 1
     ld [wShadowOAM + OAM_REIMU + 6], a
@@ -233,10 +236,10 @@ TouhouRenderOAM:
     ld [wShadowOAM + OAM_REIMU + 7], a
 
     ld a, [wPlayerY]
-    add a, 24
+    add a, OAM_Y_BIAS + SPRITE_ROW_H
     ld [wShadowOAM + OAM_REIMU + 8], a
     ld a, [wPlayerX]
-    add a, 8
+    add a, OAM_X_BIAS
     ld [wShadowOAM + OAM_REIMU + 9], a
     ld a, 2
     ld [wShadowOAM + OAM_REIMU + 10], a
@@ -244,10 +247,10 @@ TouhouRenderOAM:
     ld [wShadowOAM + OAM_REIMU + 11], a
 
     ld a, [wPlayerY]
-    add a, 24
+    add a, OAM_Y_BIAS + SPRITE_ROW_H
     ld [wShadowOAM + OAM_REIMU + 12], a
     ld a, [wPlayerX]
-    add a, 16
+    add a, OAM_X_BIAS + SPRITE_ROW_H
     ld [wShadowOAM + OAM_REIMU + 13], a
     ld a, 3
     ld [wShadowOAM + OAM_REIMU + 14], a
@@ -255,10 +258,10 @@ TouhouRenderOAM:
     ld [wShadowOAM + OAM_REIMU + 15], a
 
     ld a, [wPlayerY]
-    add a, 32
+    add a, OAM_Y_BIAS + SPRITE_ROW_H * 2
     ld [wShadowOAM + OAM_REIMU + 16], a
     ld a, [wPlayerX]
-    add a, 8
+    add a, OAM_X_BIAS
     ld [wShadowOAM + OAM_REIMU + 17], a
     ld a, 4
     ld [wShadowOAM + OAM_REIMU + 18], a
@@ -266,10 +269,10 @@ TouhouRenderOAM:
     ld [wShadowOAM + OAM_REIMU + 19], a
 
     ld a, [wPlayerY]
-    add a, 32
+    add a, OAM_Y_BIAS + SPRITE_ROW_H * 2
     ld [wShadowOAM + OAM_REIMU + 20], a
     ld a, [wPlayerX]
-    add a, 16
+    add a, OAM_X_BIAS + SPRITE_ROW_H
     ld [wShadowOAM + OAM_REIMU + 21], a
     ld a, 5
     ld [wShadowOAM + OAM_REIMU + 22], a
@@ -281,10 +284,10 @@ TouhouRenderOAM:
     cp 0
     jr z, .hideBullet0
     ld a, [wPBullet0Y]
-    add a, 16
+    add a, OAM_Y_BIAS
     ld [wShadowOAM + OAM_PBUL0], a
     ld a, [wPBullet0X]
-    add a, 8
+    add a, OAM_X_BIAS
     ld [wShadowOAM + OAM_PBUL0 + 1], a
     ld a, BULLET_TILE
     ld [wShadowOAM + OAM_PBUL0 + 2], a
@@ -301,10 +304,10 @@ TouhouRenderOAM:
     cp 0
     jr z, .hideBullet1
     ld a, [wPBullet1Y]
-    add a, 16
+    add a, OAM_Y_BIAS
     ld [wShadowOAM + OAM_PBUL1], a
     ld a, [wPBullet1X]
-    add a, 8
+    add a, OAM_X_BIAS
     ld [wShadowOAM + OAM_PBUL1 + 1], a
     ld a, BULLET_TILE
     ld [wShadowOAM + OAM_PBUL1 + 2], a
@@ -321,10 +324,10 @@ TouhouRenderOAM:
     cp 0
     jr z, .hideBullet2
     ld a, [wPBullet2Y]
-    add a, 16
+    add a, OAM_Y_BIAS
     ld [wShadowOAM + OAM_PBUL2], a
     ld a, [wPBullet2X]
-    add a, 8
+    add a, OAM_X_BIAS
     ld [wShadowOAM + OAM_PBUL2 + 1], a
     ld a, BULLET_TILE
     ld [wShadowOAM + OAM_PBUL2 + 2], a
