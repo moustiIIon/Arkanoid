@@ -434,72 +434,327 @@ Sprite 0 positionné au centre : REACT_SPRITE_Y = 84, REACT_SPRITE_X = 84
 
 ## 7. Touhou - [src/games/touhou/](src/games/touhou/)
 
-### Constantes et variables clés
+### Architecture du Shadow OAM et DMA hardware
 
-| Constante / Variable | Valeur | Rôle |
-|----------------------|--------|------|
-| `PLAYER_SPEED` | 2 | Pixels/frame par direction |
-| `PLAYER_X_MIN/MAX` | 0 / 144 | Bornes horizontales joueur |
-| `PLAYER_Y_MIN/MAX` | 0 / 120 | Bornes verticales joueur |
-| `BULLET_SPEED` | 4 | Pixels/frame (montée) |
-| `BULLET_FRAMES` | 10 | Cooldown entre tirs |
-| `BULLET_TILE` | 6 | ID de tuile projectile |
-| `wPlayerX/Y` | - | Position joueur |
-| `wFireCooldown` | 0–10 | Frames avant prochain tir |
-| `wFireSlot` | 0–2 | Index round-robin actif |
-| `wPBullet0/1/2 X/Y/Active` | - | État des 3 slots |
+**Problème :** L'OAM réel ($FE00–$FE9F) ne peut être écrit que pendant le VBlank (~1,1 ms/frame). Touhou utilise 31 sprites simultanément ; les écrire une par une pendant le VBlank est trop lent et produit du flickering si la fenêtre est dépassée.
 
-### OAM Touhou (9 sprites)
+**Solution : Shadow OAM + DMA**
 
 ```
-Sprites 0–5 : Reimu (sprite composite 16×24 = 6 tuiles 8×8)
-    Sprite 0 : (Y+16, X+8 ) tuile 0    Sprite 1 : (Y+16, X+16) tuile 1
-    Sprite 2 : (Y+24, X+8 ) tuile 2    Sprite 3 : (Y+24, X+16) tuile 3
-    Sprite 4 : (Y+32, X+8 ) tuile 4    Sprite 5 : (Y+32, X+16) tuile 5
+wShadowOAM (WRAM, 256-byte aligned, $C000–$C09F)
+    ← toutes les fonctions de rendu écrivent ici (à tout moment)
 
-Sprites 6–8 : Projectiles (1 tuile 8×8 chacun, BULLET_TILE)
-    Sprite 6 : slot 0 (wPBullet0X/Y)
-    Sprite 7 : slot 1 (wPBullet1X/Y)
-    Sprite 8 : slot 2 (wPBullet2X/Y)
+Début de chaque VBlank :
+    ld a, HIGH(wShadowOAM)   ; = $C0
+    ld [rDMA], a             ; déclenche le transfert DMA hardware
+    call hDMAWait            ; attend 160 cycles en HRAM
+
+rDMA ($FF46) → copie 160 octets de $C000–$C09F vers $FE00–$FE9F
+               en exactement 160 cycles CPU
+               pendant lesquels seule la HRAM ($FF80–$FFFE) est accessible
 ```
 
-### Gestion des projectiles (round-robin)
+**Contrainte hardware :** Durant le DMA, le CPU ne peut exécuter aucun code en ROM, WRAM ou VRAM — uniquement HRAM. La routine d'attente est donc copiée en HRAM ($FF80) lors du `TouhouInit` :
 
-```
-Tir (bouton A, si wFireCooldown == 0) :
-    Activer slot wFireSlot
-    wPBulletNX ← wPlayerX + 4   (centré sur le joueur)
-    wPBulletNY ← wPlayerY
-    wFireSlot  ← (wFireSlot + 1) % 3
-    wFireCooldown ← 10
-
-Mise à jour (chaque frame, par slot actif) :
-    wPBulletNY -= BULLET_SPEED (4)
-    Si underflow (carry set, Y < 0) → désactiver le slot
-    Écrire position dans OAM sprite 6+N
+```asm
+DMAWaitRoutine:       ; copiée à $FF80 au démarrage
+    ld a, 40
+.loop:
+    dec a
+    jr nz, .loop      ; 40 × (dec + jr) ≈ 160 cycles
+    ret
 ```
 
-### Déplacement joueur
+**Alignement 256 octets :** `SECTION "Shadow OAM", WRAM0, ALIGN[8]` impose `HIGH(wShadowOAM) = $C0`. Sans cet alignement, `rDMA` pointerait vers une mauvaise page mémoire et copierait des données aléatoires.
+
+**Résultat :** Mise à jour OAM atomique — le hardware lit le shadow et le copie en un seul bloc, sans glitch visible.
+
+---
+
+### Layout OAM complet (31 sprites)
 
 ```
-Chaque frame :
-    UP    → wPlayerY -= PLAYER_SPEED, clamp ≥ PLAYER_Y_MIN (0)
-    DOWN  → wPlayerY += PLAYER_SPEED, clamp ≤ PLAYER_Y_MAX (120)
-    LEFT  → wPlayerX -= PLAYER_SPEED, clamp ≥ PLAYER_X_MIN (0)
-    RIGHT → wPlayerX += PLAYER_SPEED, clamp ≤ PLAYER_X_MAX (144)
-
-    Mettre à jour les 6 sprites OAM en fonction de wPlayerX/Y
+Offset  Sprites  Contenu
+$00     0– 5    Sakuya (boss) — grille 2×3 tiles 8×8 = 16×24 px
+$18     6–11    Reimu (joueur) — grille 2×3 tiles 8×8 = 16×24 px
+$30     12      Balle joueur slot 0
+$34     13      Balle joueur slot 1
+$38     14      Balle joueur slot 2
+$3C–$6B 15–26   12 balles boss (BOSS_BUL_COUNT)
+$6C     27      Sous-ennemi 0
+$70     28      Sous-ennemi 1
+$74     29      Balle sous-ennemi 0
+$78     30      Balle sous-ennemi 1
 ```
+
+Constantes OAM déclarées dans `touhou.asm` :
+```asm
+DEF OAM_BOSS      EQU $00
+DEF OAM_REIMU     EQU $18
+DEF OAM_PBUL0     EQU $30
+DEF OAM_BOSS_BUL  EQU $3C
+DEF OAM_SUBENEMY0 EQU $6C
+DEF OAM_SUBENBUL0 EQU $74
+```
+
+**Constantes d'offset OAM hardware :**
+```asm
+DEF OAM_Y_BIAS   EQU 16   ; GB : sprite hors écran si Y < 16
+DEF OAM_X_BIAS   EQU 8    ; GB : sprite hors écran si X < 8
+DEF SPRITE_ROW_H EQU 8    ; hauteur d'une tuile en pixels
+```
+Les sprites composites (Reimu, Sakuya) utilisent `OAM_Y_BIAS + SPRITE_ROW_H * N` et `OAM_X_BIAS + SPRITE_ROW_H * N` pour positionner chaque tuile dans la grille.
+
+---
 
 ### Machine à états (`wTouhouState`)
 
 ```
-TOUHOU_STATE_GAME (0) :
-    Traite mouvement, tir, sync OAM
-    START pressé → TransitionScreenToBlack → GlobalMenuInit
+TOUHOU_STATE_WAVE (0)  ← état initial
+    UpdateWave → ennemis actifs
+    Tous morts → wWaveIndex++ → SpawnWave
+    wWaveIndex > 2 → BossInit → TOUHOU_STATE_BOSS (1)
 
-TOUHOU_STATE_OVER (1) :
-    Attend START → GlobalMenuInit
+TOUHOU_STATE_BOSS (1)
+    UpdateBoss → mouvement + tir boss
+    Phase 1 HP=0 → BOSS_PHASE_2, spawn sous-ennemis, reset HP
+    Phase 2 HP=0 → TOUHOU_STATE_WIN (2)
+    wPlayerLives=0 → TOUHOU_STATE_OVER (3)
+
+TOUHOU_STATE_WIN (2)
+    Affiche "WIN" (tuiles TILE_W/I/N à REACT_WIN_ADDR)
+    START → GlobalMenuInit
+
+TOUHOU_STATE_OVER (3)
+    Affiche "FAIL" (tuiles TILE_F/A/I/L à REACT_FAIL_ADDR)
+    START → GlobalMenuInit
+```
+
+---
+
+### Système de vagues (`touhou_wave.asm`)
+
+```
+wWaveIndex : 0 → 1 → 2 → boss
+
+Vague 0 — diagonale ↘ (DX=+1, DY=+1)
+    X : WAVE_X0=8, WAVE_X1=44, WAVE_X2=80, WAVE_X3=116
+    Y : 0 (tous en haut)
+
+Vague 1 — diagonale ↙ (DX=-1, DY=+1)
+    X : WAVE_X3=116, WAVE_X2=80, WAVE_X1=44, WAVE_X0=8
+    Y : 0
+
+Vague 2 — horizontal (±1, DY=1)
+    X : WAVE_EDGE_L=0 (×2, depuis gauche) + WAVE_EDGE_R=160 (×2, depuis droite)
+    Y : WAVE2_Y0=20, WAVE2_Y1=50 (décalés verticalement)
+```
+
+`CheckWaveDone` : vérifie `wEnemyActive[0..3]` — si tous à 0, incrémente `wWaveIndex` et appelle `SpawnWave`. Si `wWaveIndex > 2` → `BossInit`.
+
+---
+
+### Constantes et variables joueur
+
+| Constante | Valeur | Rôle |
+|-----------|--------|------|
+| `PLAYER_SPEED` | 2 | px/frame (mouvement) |
+| `PLAYER_X_MIN/MAX` | 0 / 144 | Bornes horizontales |
+| `PLAYER_Y_MIN/MAX` | 0 / 120 | Bornes verticales |
+| `BULLET_SPEED` | 7 | px/frame (montée balle) |
+| `BULLET_FRAMES` | 5 | Cooldown entre tirs (frames) |
+| `PLAYER_BUL_X_OFF` | 4 | Décalage X balle depuis joueur |
+| `INVINC_FRAMES` | 60 | Frames d'invincibilité après touche |
+
+**Tir (round-robin 3 slots) :**
+```
+Si wFireCooldown > 0 → décrémenter, pas de tir
+Si wFireCooldown == 0 et A pressé :
+    slot ← wFireSlot (0/1/2)
+    wPBulletN_X ← wPlayerX + PLAYER_BUL_X_OFF
+    wPBulletN_Y ← wPlayerY
+    wPBulletN_Active ← 1
+    wFireSlot ← (slot + 1) % 3
+    wFireCooldown ← BULLET_FRAMES
+
+Mise à jour (chaque frame, par slot actif) :
+    wPBulletN_Y -= BULLET_SPEED
+    carry set (underflow) → désactiver le slot
+```
+
+---
+
+### Boss — Sakuya Izayoi (`touhou_sakuya.asm`)
+
+#### Constantes boss
+
+| Constante | Valeur | Rôle |
+|-----------|--------|------|
+| `BOSS_HP` | 30 | PV par phase |
+| `BOSS_SPEED` | 1 | px/frame horizontal |
+| `BOSS_X_MIN/MAX` | 8 / 136 | Bornes horizontales boss |
+| `BOSS_INIT_X/Y` | 72 / 16 | Position de spawn |
+| `BOSS_SHOOT_RATE` | 30 | Frames entre salves |
+| `BOSS_BUL_SPD` | 1 | px/frame balle boss |
+| `BOSS_BUL_COUNT` | 12 | Slots de balles simultanées |
+| `BOSS_FIRE_Y_OFF` | 24 | Décalage Y spawn balle depuis boss |
+| `BOSS_CENTER_OFF` | 8 | Décalage X centre depuis wBossX |
+| `BOSS_COL_OFF` | 12 | Écart entre colonnes (phase 1) |
+| `WRAP_THRESHOLD` | 200 | Seuil détection sortie droite+gauche |
+
+#### Mouvement boss (`MoveBoss`)
+
+```
+Chaque frame :
+    newX ← wBossX + wBossDX
+    Si newX ≥ WRAP_THRESHOLD (wrap négatif) → bounce gauche
+    Si newX > BOSS_X_MAX     → bounce droite (wBossDX ← -BOSS_SPEED & $FF)
+    Si newX < BOSS_X_MIN     → bounce gauche (wBossDX ← +BOSS_SPEED)
+    Sinon : wBossX ← newX
+```
+
+`wBossDX` stocké en complément à 2 sur 8 bits : `-BOSS_SPEED & $FF = $FF` pour aller à gauche.
+
+#### Tir boss par phase (`BossShoot`)
+
+```
+Phase 1 (BOSS_PHASE_1 = 0) — 3 colonnes verticales (DX=0) :
+    Balle centre    : X = wBossX + BOSS_CENTER_OFF, DX = 0
+    Balle gauche    : X = wBossX + BOSS_CENTER_OFF - BOSS_COL_OFF, DX = 0
+    Balle droite    : X = wBossX + BOSS_CENTER_OFF + BOSS_COL_OFF, DX = 0
+
+Phase 2 (BOSS_PHASE_2 = 1) — éventail 3 directions :
+    Balle verticale : X = centre, DX = 0
+    Balle diag. ←   : X = centre, DX = -BOSS_BUL_SPD & $FF
+    Balle diag. →   : X = centre, DX = +BOSS_BUL_SPD
+```
+
+`SpawnBossBul(a=X, b=Y, c=DX, de=slot)` écrit X/Y/Active/DY/DX dans les tableaux WRAM correspondants puis incrémente `e`.
+
+#### Mise à jour balles boss (`UpdateBossBullets`)
+
+```
+Pour chaque slot 0..11 :
+    Si actif :
+        Y += wBossBulDY[slot]
+        Si Y ≥ SCREEN_H (160) → désactiver
+        X += wBossBulDX[slot]
+        Si X ≥ SCREEN_H (160) → désactiver
+```
+
+**Astuce :** `cp SCREEN_H` après l'addition 8 bits attrape deux cas :
+- Sortie droite : X ∈ [160, 199] → X ≥ 160
+- Sortie gauche : X < 0 → underflow 8 bits → X ∈ [200, 255] → X ≥ 160 aussi (`WRAP_THRESHOLD = 200`)
+
+#### Transition de phase et sous-ennemis
+
+```
+CheckBulletVsBoss :
+    Collision → wBossHP--
+    wBossHP == 0 ?
+        wBossPhase == BOSS_PHASE_1 ?
+            wBossPhase ← BOSS_PHASE_2
+            wBossHP ← BOSS_HP       ; reset 30 PV
+            call SpawnSubEnemies
+        wBossPhase == BOSS_PHASE_2 ?
+            wTouhouState ← TOUHOU_STATE_WIN
+```
+
+#### Sous-ennemis (`SpawnSubEnemies`)
+
+```
+Sous-ennemi 0 (gauche) : X = SUB_ENEMY0_X (24), Y = wBossY
+    wSubEnemyShootTimer[0] ← SUB_ENEMY_SHOOT_RATE (40)
+
+Sous-ennemi 1 (droite) : X = SUB_ENEMY1_X (112), Y = wBossY
+    wSubEnemyShootTimer[1] ← SUB_ENEMY_SHOOT_RATE / 2 (20) ← décalé
+```
+
+Les sous-ennemis sont **statiques** (ne bougent pas). Chacun tire vers le bas toutes les 40 frames dès que son slot de balle est libre :
+
+```
+UpdateSubEnemies (par sous-ennemi i) :
+    wSubEnemyShootTimer[i]--
+    Si timer == 0 ET wSubEnemyBulActive[i] == 0 :
+        wSubEnemyBulActive[i] ← 1
+        wSubEnemyBulX[i] ← wSubEnemyX[i]
+        wSubEnemyBulY[i] ← wSubEnemyY[i]
+        reset timer ← SUB_ENEMY_SHOOT_RATE
+```
+
+---
+
+### Hitboxes et collisions
+
+| Entité | Dimensions hitbox |
+|--------|------------------|
+| Boss (Sakuya) | `BOSS_HIT_W=17` × `BOSS_HIT_H=25` |
+| Balles boss/sous-ennemis | `BOSS_BUL_HIT=9` (seuil absolu X et Y) |
+| Sous-ennemis | `SUB_ENEMY_HIT_W=9` × `SUB_ENEMY_HIT_H=9` |
+
+**Méthode de collision (distance absolue signée) :**
+```asm
+; |a - e| < seuil ?
+sub e
+jr nc, .positive
+cpl
+inc a          ; a ← -a (valeur absolue)
+.positive:
+cp SEUIL       ; carry set si |diff| < SEUIL → collision
+```
+
+**Invincibilité :** `wInvincTimer` décrémenté chaque frame. Si > 0, `CheckBossBulletsVsReimu` et `CheckSubEnemyBulletsVsReimu` retournent immédiatement. Toute touche valide déclenche `wInvincTimer ← INVINC_FRAMES (60)`.
+
+---
+
+### WRAM Touhou (variables)
+
+```
+wTouhouState    : état machine (WAVE/BOSS/WIN/OVER)
+wTouhouFrame    : compteur global de frames
+wPlayerX/Y      : position joueur
+wPlayerLives    : vies restantes (init = 5)
+wInvincTimer    : frames d'invincibilité restantes
+wPBullet0..2    : X, Y, Active × 3 slots joueur
+wFireCooldown   : cooldown tir
+wFireSlot       : index round-robin (0..2)
+
+wBossActive/HP/X/Y/DX/ShootTimer/BulSlot/Phase
+wBossBulX/Y/Active/DY/DX : ds 12   ← tableaux 12 balles boss
+
+wSubEnemyX/Y/Active/ShootTimer : ds 2
+wSubEnemyBulX/Y/Active         : ds 2
+
+wTouhouWinDrawn / wTouhouOverDrawn  : flag one-shot affichage fin
+```
+
+---
+
+### Flux d'exécution par frame (WAVE et BOSS)
+
+```
+TouhouLoop:
+    MyWaitVBlank
+    TouhouRenderOAM :
+        ld a, HIGH(wShadowOAM)
+        ld [rDMA], a            ; déclenche DMA → OAM réel mis à jour
+        call hDMAWait           ; attend en HRAM
+        [écrire nouvelles positions dans wShadowOAM pour la frame suivante]
+    UpdateKeys
+
+    STATE == WAVE ?
+        UpdateWave
+            UpdateEnemies, UpdateEnemyBullets
+            CheckEnemyBulletsVsReimu, CheckPlayerBulletsVsEnemies
+            CheckWaveDone → SpawnWave ou BossInit
+    STATE == BOSS ?
+        UpdateBoss
+            MoveBoss, BossShoot, UpdateBossBullets
+            UpdateSubEnemies, UpdateSubEnemyBullets
+            CheckBossBulletsVsReimu, CheckSubEnemyBulletsVsReimu
+            CheckPlayerBulletsVsBoss, CheckPlayerBulletsVsSubEnemies
+    STATE == WIN/OVER ?
+        Affichage + attente START
 ```
 
 ---
@@ -513,7 +768,8 @@ TOUHOU_STATE_OVER (1) :
 | `rBGP` | `$FF47` | Palette fond (4×2 bits) |
 | `rOBP0` | `$FF48` | Palette sprites (4×2 bits) |
 | `rJOYP` | `$FF00` | Joypad (lecture multiplexée boutons/D-pad) |
-| `rDIV` | `$FF04` | Timer hardware (incrémente en continu → source RNG) |
+| `rDIV` | `$FF04` | Timer hardware (incrémente ~16 384×/s → source RNG) |
+| `rDMA` | `$FF46` | Déclenche le DMA OAM (Touhou) |
 | `rWY / rWX` | `$FF4A / $FF4B` | Position de la Window layer (Reaction HUD) |
 
 **Bits `rLCDC` utilisés :**
@@ -585,13 +841,24 @@ Avantage : l'affichage ne nécessite aucune conversion - les nibbles sont direct
 
 Plutôt qu'une vitesse fractionnaire (impossible en entiers simples), le code répète la physique balle `N` fois par frame via `wBallSpeedValue`. La boucle `BrickLoop` itère 1 à 4 fois selon ce multiplicateur. Chaque itération applique un pas complet de momentum + détection de collision.
 
-### Sprites composites pour Reimu (Touhou)
+### Sprites composites pour Reimu et Sakuya (Touhou)
 
-Le Game Boy est limité à des sprites 8×8 ou 8×16. Reimu mesure 16×24 pixels, soit 6 tuiles. Le code maintient 6 entrées OAM avec des offsets calculés depuis `wPlayerX/Y`, simulant un unique sprite large. Toutes les 6 entrées sont mises à jour ensemble chaque frame.
+Le Game Boy est limité à des sprites 8×8 ou 8×16. Reimu et Sakuya mesurent 16×24 pixels chacune, soit 6 tuiles. Le code maintient 6 entrées OAM avec des offsets calculés depuis la position de base :
 
-### Protection OAM et fenêtre d'accès
+```
+Colonne 1 : X + OAM_X_BIAS         (= X + 8)
+Colonne 2 : X + OAM_X_BIAS + SPRITE_ROW_H  (= X + 16)
+Ligne 1   : Y + OAM_Y_BIAS         (= Y + 16)
+Ligne 2   : Y + OAM_Y_BIAS + SPRITE_ROW_H  (= Y + 24)
+Ligne 3   : Y + OAM_Y_BIAS + SPRITE_ROW_H*2 (= Y + 32)
+```
 
-Écrire en OAM (`$FE00–$FE9F`) pendant le rendu provoque des glitches. `MyWaitVBlank` garantit que toutes les écritures OAM se font dans la fenêtre VBlank (scanline >= 144). Cette contrainte est la raison pour laquelle chaque game loop commence par `MyWaitVBlank`.
+Les constantes `OAM_Y_BIAS=16` et `OAM_X_BIAS=8` reflètent la contrainte hardware du Game Boy : un sprite à Y=0 est masqué au-dessus de l'écran, l'écran visible commence à Y=16.
+
+### Protection OAM : Shadow OAM vs écriture directe
+
+- **Brick et Reaction** : écrivent directement en OAM ($FE00) pendant le VBlank. `MyWaitVBlank` garantit la fenêtre d'accès (~1,1 ms).
+- **Touhou** : utilise le Shadow OAM + DMA (voir section 7). Le rendu écrit dans `wShadowOAM` (WRAM) à tout moment, le DMA copie atomiquement en début de VBlank. Élimine tout risque de glitch même avec 31 sprites.
 
 ### Palette comme outil de transition
 
@@ -630,9 +897,42 @@ main.asm
     │   └── transition.asm
     │
     └─► touhou.asm
-        ├── init.asm          CommonInit
-        ├── memcpy.asm        Sprites Reimu + projectiles
-        ├── input.asm         Mouvement + tir (wCurKeys + wNewKeys)
-        ├── touhou_game.asm   Physique bullets, OAM 9 sprites, bounds
-        └── transition.asm    Retour menu sur START
+        ├── init.asm                CommonInit + copie DMAWaitRoutine → HRAM
+        ├── memcpy.asm              Sprites Reimu, Sakuya, ennemis, balles
+        ├── input.asm               Mouvement + tir (wCurKeys + wNewKeys)
+        ├── touhou_game.asm
+        │   ├── TouhouGameScreen    Physique joueur, balles joueur, bounds
+        │   └── TouhouRenderOAM     DMA + écriture shadow OAM (31 sprites)
+        ├── touhou_wave.asm
+        │   ├── SpawnWave           Initialise positions/DX/DY des 4 ennemis
+        │   ├── UpdateWave          UpdateEnemies + bullets + collisions + CheckWaveDone
+        │   └── CheckWaveDone       Détecte vague terminée → vague suivante ou boss
+        ├── touhou_enemies.asm
+        │   ├── UpdateEnemies       IA ennemis (mouvement + tir périodique)
+        │   ├── UpdateEnemyBullets  Déplacement balles ennemies vers le bas
+        │   ├── RenderEnemyOAM      Écriture shadow OAM ennemis
+        │   └── CheckPlayerBulletsVsEnemies
+        ├── touhou_sakuya.asm
+        │   ├── BossInit            Init HP, position, phase, slots balles
+        │   ├── MoveBoss            Oscillation horizontale avec bounce
+        │   ├── BossShoot           Tir phase 1 (3 colonnes) / phase 2 (éventail)
+        │   ├── SpawnBossBul        Alloue un slot de balle boss
+        │   ├── UpdateBossBullets   Déplacement X+Y, détection sortie écran
+        │   ├── CheckBulletVsBoss   Collision + gestion transition de phase
+        │   ├── SpawnSubEnemies     Spawn 2 sous-ennemis statiques
+        │   ├── UpdateSubEnemies    Timer tir sous-ennemis
+        │   ├── UpdateSubEnemyBullets
+        │   ├── CheckBossBulletsVsReimu
+        │   ├── CheckSubEnemyBulletsVsReimu
+        │   ├── CheckPlayerBulletsVsBoss
+        │   ├── CheckPlayerBulletsVsSubEnemies
+        │   ├── BossHitReimu        Décrémenter vies + invincibilité
+        │   └── UpdateBoss          Orchestrateur (appelle toutes les fonctions ci-dessus)
+        ├── touhou_sakuya_render.asm
+        │   ├── RenderBossOAM       6 sprites Sakuya dans shadow OAM
+        │   ├── ClearBossOAM        Masque sprites boss hors phase boss
+        │   ├── RenderBossBullets   Loop sur 12 slots → shadow OAM
+        │   ├── RenderSubEnemies    2 sprites sous-ennemis
+        │   └── RenderSubEnemyBullets
+        └── transition.asm          Retour menu (WIN/OVER → START)
 ```
