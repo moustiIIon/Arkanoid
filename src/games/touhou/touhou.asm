@@ -8,7 +8,18 @@ DEF OAM_REIMU EQU $18 ; sprites 6-11 : Reimu
 DEF OAM_PBUL0 EQU $30 ; sprite 12 : balle joueur 0
 DEF OAM_PBUL1 EQU $34 ; sprite 13 : balle joueur 1
 DEF OAM_PBUL2 EQU $38 ; sprite 14 : balle joueur 2
-DEF OAM_BOSS_BUL EQU $3C ; sprites 15+ : ennemis / balles boss
+DEF OAM_BOSS_BUL  EQU $3C ; sprites 15-26 : ennemis / balles boss
+DEF OAM_SUBENEMY0 EQU $6C ; sprite 27 : sous-ennemi 0
+DEF OAM_SUBENEMY1 EQU $70 ; sprite 28 : sous-ennemi 1
+DEF OAM_SUBENBUL0 EQU $74 ; sprite 29 : balle sous-ennemi 0
+DEF OAM_SUBENBUL1 EQU $78 ; sprite 30 : balle sous-ennemi 1
+
+DEF OAM_Y_BIAS EQU 16 ; hardware: sprite Y<16 is hidden on GB
+DEF OAM_X_BIAS EQU 8 ; hardware: sprite X<8 is hidden on GB
+DEF SPRITE_ROW_H EQU 8 ; sprite tile height in pixels
+DEF FLAG_ACTIVE  EQU 1
+DEF BOSS_PHASE_1 EQU 0
+DEF BOSS_PHASE_2 EQU 1
 
 SECTION "Touhou Game", ROM0
 
@@ -63,6 +74,10 @@ TouhouInit:
     ld [wWaveIndex], a
     ld [wBossActive], a
     ld [wBossHP], a
+    ld [wSubEnemyActive], a
+    ld [wSubEnemyActive + 1], a
+    ld [wSubEnemyBulActive], a
+    ld [wSubEnemyBulActive + 1], a
     ld [wTouhouWinDrawn], a
     ld [wTouhouOverDrawn], a
     ld a, 5
@@ -136,3 +151,11 @@ wBossBulDX: ds 12
 
 wTouhouWinDrawn: db
 wTouhouOverDrawn: db
+
+wSubEnemyX: ds 2
+wSubEnemyY: ds 2
+wSubEnemyActive: ds 2
+wSubEnemyShootTimer: ds 2
+wSubEnemyBulX: ds 2
+wSubEnemyBulY: ds 2
+wSubEnemyBulActive: ds 2
