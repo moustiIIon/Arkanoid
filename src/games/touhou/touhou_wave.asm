@@ -20,6 +20,15 @@ DEF ENEMY_TILE EQU 7
 DEF ENBUL_TILE EQU 8
 DEF BOSS_TILE  EQU 9 ; Sakuya 2x3 tiles (9-14), grille identique à Reimu
 
+DEF WAVE_X0     EQU 8
+DEF WAVE_X1     EQU 44
+DEF WAVE_X2     EQU 80
+DEF WAVE_X3     EQU 116
+DEF WAVE_EDGE_L EQU 0
+DEF WAVE_EDGE_R EQU 160
+DEF WAVE2_Y0    EQU 20
+DEF WAVE2_Y1    EQU 50
+
 ;remplis 4 octets consécutifs en WRAM avec une valeur immédiate
 ;usage : FILL4 adresse, valeur
 MACRO FILL4
@@ -51,15 +60,15 @@ SpawnWave:
     ret
 
 .wave0:
-    ; diagonale (haut gauche vers bas droite) : X=8,44,80,116  DX=+1 DY=+1
+    ; diagonale (haut gauche vers bas droite) : X=WAVE_X0-3  DX=+1 DY=+1
     ld hl, wEnemyX
-    ld a, 8
+    ld a, WAVE_X0
     ld [hli], a
-    ld a, 44
+    ld a, WAVE_X1
     ld [hli], a
-    ld a, 80
+    ld a, WAVE_X2
     ld [hli], a
-    ld a, 116
+    ld a, WAVE_X3
     ld [hl], a
     FILL4 wEnemyY,  0
     FILL4 wEnemyDX, ENEMY_SPEED
@@ -67,15 +76,15 @@ SpawnWave:
     jr .initCommon
 
 .wave1:
-    ; diagonale (haut droite vers bas gauche) : X=116,80,44,8  DX=-1 DY=+1
+    ; diagonale (haut droite vers bas gauche) : X=WAVE_X3-0  DX=-1 DY=+1
     ld hl, wEnemyX
-    ld a, 116
+    ld a, WAVE_X3
     ld [hli], a
-    ld a, 80
+    ld a, WAVE_X2
     ld [hli], a
-    ld a, 44
+    ld a, WAVE_X1
     ld [hli], a
-    ld a, 8
+    ld a, WAVE_X0
     ld [hl], a
     FILL4 wEnemyY,  0
     FILL4 wEnemyDX, -ENEMY_SPEED & $FF
@@ -83,23 +92,23 @@ SpawnWave:
     jr .initCommon
 
 .wave2:
-    ;horizontal : 2 depuis gauche (Y=20,50) + 2 depuis droite (Y=20,50)
+    ;horizontal : 2 depuis gauche (Y=WAVE2_Y0,WAVE2_Y1) + 2 depuis droite
     ld hl, wEnemyX
-    xor a
+    ld a, WAVE_EDGE_L
     ld [hli], a
     ld [hli], a
-    ld a, 160
+    ld a, WAVE_EDGE_R
     ld [hli], a
     ld [hl], a
 
     ld hl, wEnemyY
-    ld a, 20
+    ld a, WAVE2_Y0
     ld [hli], a
-    ld a, 50
+    ld a, WAVE2_Y1
     ld [hli], a
-    ld a, 20
+    ld a, WAVE2_Y0
     ld [hli], a
-    ld a, 50
+    ld a, WAVE2_Y1
     ld [hl], a
 
     ld hl, wEnemyDX
@@ -110,7 +119,7 @@ SpawnWave:
     ld [hli], a
     ld [hl], a
 
-    FILL4 wEnemyDY, 1
+    FILL4 wEnemyDY, ENEMY_SPEED
 
 .initCommon:
     FILL4 wEnemyActive, 1
