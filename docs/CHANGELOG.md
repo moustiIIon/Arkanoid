@@ -4,6 +4,84 @@ All notable changes to this project are documented here.
 
 ---
 
+## [2026-05-17]
+
+### Added
+- Sakuya 2nd phase: bullet patterns, sub-enemies spawning and rendering
+- Sub-enemy logic initialization and wave handling via DMA
+- `InitSubEnemies` and related WRAM structure for sub-enemy state
+
+### Refactored
+- Hardcoded player and bullet positions replaced with named constants
+
+### Fixed
+- Minor bullet flickering issues resolved
+
+---
+
+## [2026-05-16]
+
+### Refactored
+- Full OAM handling rewrite for Touhou: now uses DMA transfer (`HDMA`) for better visuals and correct hardware compliance
+
+---
+
+## [2026-05-15]
+
+### Added
+- Sakuya boss implementation: rendering, movement, and boundary clamping
+- Merge of SFX branch into Touhou game branch
+
+### Fixed
+- Sakuya boundary handling corrected
+
+---
+
+## [2026-05-14]
+
+### Added
+- Enemy wave logic: direction handling, smooth movement via OAM flickering (every 2 frames)
+- Enemy collision detection and hitbox handling
+- Real sprite tiles replacing placeholder tiles for enemies
+
+---
+
+## [2026-05-13]
+
+### Added
+- APU initialization: SFX system scaffolded (`InitAPU` function)
+- Menu SFX: click sound on game selection
+- Brick-break SFX for Arkanoid
+- Enemy sprites and enemy bullet sprites for Touhou
+- Reimu hitbox logic and enemy wave init
+- WRAM init for Touhou game state
+- Documentation: complete guide on Game Boy audio (SFX/music) with RGBASM
+
+---
+
+## [2026-05-12]
+
+### Added
+- 3rd game: **Touhou** added to the cartridge
+- Reimu player: 8-direction movement, OAM-centered sprite (8×8)
+- Bullet system: 3-slot round-robin firing with cooldown and upward speed
+- Arkanoid: ball speed increases with score via frame-counter system
+
+### Refactored
+- Whole codebase refactored for modularity and readability
+- Common `InitGame` function shared across all 3 games (reduces duplication)
+- Sprite mode switched from 8×16 to 8×8
+- Menu logic cleaned up; game selection flow improved
+
+---
+
+## [2026-05-11]
+
+### Added
+- `touhou.asm` scaffold: Touhou game file initialized (init only)
+
+---
+
 ## [2026-05-08]
 
 ### Added
